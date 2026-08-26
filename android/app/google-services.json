@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "592874357668",
+    "project_id": "tipster-ia",
+    "storage_bucket": "tipster-ia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:592874357668:android:5bcbb292b5419764f7f731",
+        "android_client_info": {
+          "package_name": "com.tipsteria.tipster_ia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHqdNWUfEI5eK_6Jty1b-Y7knd9HMDAu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
