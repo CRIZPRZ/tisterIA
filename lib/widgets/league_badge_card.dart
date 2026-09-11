@@ -11,12 +11,17 @@ class LeagueBadgeCard extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
   final VoidCallback? onPickTeam;
+  // Solo para ligas que no están en el kLeagueIds hardcodeado (ej. las
+  // que vienen dinámicas de /leagues) — si se omite cae al lookup viejo
+  // por nombre en data/leagues.dart.
+  final String? logoUrl;
   const LeagueBadgeCard({
     super.key,
     required this.league,
     required this.active,
     required this.onTap,
     this.onPickTeam,
+    this.logoUrl,
   });
 
   @override
@@ -57,7 +62,7 @@ class LeagueBadgeCard extends StatelessWidget {
                 border: Border.all(color: AppColors.screenBg, width: 3),
                 boxShadow: active ? [BoxShadow(color: AppColors.green.withValues(alpha: 0.55), blurRadius: 12, spreadRadius: 1)] : null,
               ),
-              child: TeamCrest(name: league, size: 56, logoUrl: leagueLogoUrl(league)),
+              child: TeamCrest(name: league, size: 56, logoUrl: logoUrl ?? leagueLogoUrl(league)),
             ),
             // declarado DESPUÉS del escudo a propósito — en un Stack pinta
             // (y recibe el toque) lo último en la lista; antes estaba antes
