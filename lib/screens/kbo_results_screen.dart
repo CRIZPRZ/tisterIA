@@ -34,6 +34,7 @@ class KboResultsScreen extends StatefulWidget {
 
 class _KboResultsScreenState extends State<KboResultsScreen> {
   List<BaseballGame>? _games;
+  Map<int, KboBatchPrediction> _predictions = {};
   bool _error = false;
   _KboFilter _filter = _KboFilter.hoy;
 
@@ -60,7 +61,14 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
       if (mounted) setState(() => _games = games);
     } catch (_) {
       if (mounted) setState(() => _error = true);
+      return;
     }
+    // Falla silenciosa a propósito: si /predict/batch truena (ej. sin
+    // muestra todavía), la lista de resultados igual debe verse.
+    try {
+      final predictions = await BaseballService.instance.fetchPredictionBatch(leagueId: 5);
+      if (mounted) setState(() => _predictions = {for (final p in predictions) p.gameId: p});
+    } catch (_) {}
   }
 
   @override
@@ -140,6 +148,7 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
     final isFinished = g.status == 'FT';
     final homeWon = isFinished && (g.homeScore ?? 0) > (g.awayScore ?? 0);
     final awayWon = isFinished && (g.awayScore ?? 0) > (g.homeScore ?? 0);
+    final prediction = _predictions[g.gameId];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
@@ -188,6 +197,29 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
                     style: AppText.style(24, weight: FontWeight.w800)),
               ],
             ),
+            if (prediction != null) ...[
+              const SizedBox(height: 12),
+              Container(height: 1, color: AppColors.greyTint),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.insights_rounded, size: 14, color: AppColors.textFaint),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${prediction.favorite} · ${(prediction.probFavorite * 100).round()}%',
+                      style: AppText.style(12, weight: FontWeight.w700, color: AppColors.textMuted),
+                    ),
+                  ),
+                  if (prediction.hit != null)
+                    Pill(
+                      label: prediction.hit! ? 'ACIERTO' : 'FALLO',
+                      color: prediction.hit! ? AppColors.green : AppColors.red,
+                      background: (prediction.hit! ? AppColors.green : AppColors.red).withValues(alpha: 0.16),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
         ),

@@ -69,3 +69,19 @@ class KboPrediction {
         sampleMin: json['sampleMin'] as int,
       );
 }
+
+class KboBatchPrediction {
+  final int gameId;
+  final String favorite;
+  final double probFavorite;
+  final bool? hit;
+
+  const KboBatchPrediction({required this.gameId, required this.favorite, required this.probFavorite, this.hit});
+
+  factory KboBatchPrediction.fromJson(Map<String, dynamic> json) => KboBatchPrediction(
+        gameId: json['gameId'] as int,
+        favorite: json['favorite'] as String,
+        probFavorite: (json['probFavorite'] as num).toDouble(),
+        hit: json['hit'] as bool?,
+      );
+}

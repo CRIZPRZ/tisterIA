@@ -31,4 +31,9 @@ class BaseballService {
       rethrow;
     }
   }
+
+  Future<List<KboBatchPrediction>> fetchPredictionBatch({int leagueId = 5}) async {
+    final res = await _dio.get('/baseball/predict/batch', queryParameters: {'league_id': leagueId});
+    return (res.data as List).map((e) => KboBatchPrediction.fromJson(e as Map<String, dynamic>)).toList();
+  }
 }
