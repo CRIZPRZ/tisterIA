@@ -12,7 +12,7 @@ import '../widgets/team_crest.dart';
 // KBO — resultados ya jugados y partidos programados (scraping de
 // koreabaseball.com, ver app/services/kbo_scraper.py del backend).
 
-enum _KboFilter { todos, hoy, manana }
+enum _KboFilter { todos, ayer, hoy, manana }
 
 const _monthAbbr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -35,7 +35,7 @@ class KboResultsScreen extends StatefulWidget {
 class _KboResultsScreenState extends State<KboResultsScreen> {
   List<BaseballGame>? _games;
   bool _error = false;
-  _KboFilter _filter = _KboFilter.todos;
+  _KboFilter _filter = _KboFilter.hoy;
 
   // Coreano (KST) va 15h adelante de México — comparar contra el reloj
   // del celular directo haría que "HOY"/"MAÑANA" agarraran el día
@@ -45,6 +45,7 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
   String _fmtDate(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   String get _todayStr => _fmtDate(_kstNow);
   String get _tomorrowStr => _fmtDate(_kstNow.add(const Duration(days: 1)));
+  String get _yesterdayStr => _fmtDate(_kstNow.subtract(const Duration(days: 1)));
 
   @override
   void initState() {
@@ -69,6 +70,8 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
       switch (_filter) {
         case _KboFilter.todos:
           break;
+        case _KboFilter.ayer:
+          filtered = filtered.where((g) => g.matchDate == _yesterdayStr).toList();
         case _KboFilter.hoy:
           filtered = filtered.where((g) => g.matchDate == _todayStr).toList();
         case _KboFilter.manana:
@@ -87,6 +90,8 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
             child: Row(
               children: [
                 _KboFilterChip(label: 'TODOS', active: _filter == _KboFilter.todos, onTap: () => setState(() => _filter = _KboFilter.todos)),
+                const SizedBox(width: 8),
+                _KboFilterChip(label: 'AYER', active: _filter == _KboFilter.ayer, onTap: () => setState(() => _filter = _KboFilter.ayer)),
                 const SizedBox(width: 8),
                 _KboFilterChip(label: 'HOY', active: _filter == _KboFilter.hoy, onTap: () => setState(() => _filter = _KboFilter.hoy)),
                 const SizedBox(width: 8),
@@ -108,7 +113,11 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
                       : filtered!.isEmpty
                           ? EmptyState(
                               icon: Icons.sports_baseball_rounded,
-                              title: _filter == _KboFilter.manana ? 'Sin partidos mañana' : 'Sin partidos hoy',
+                              title: switch (_filter) {
+                                _KboFilter.manana => 'Sin partidos mañana',
+                                _KboFilter.ayer => 'Sin partidos ayer',
+                                _ => 'Sin partidos hoy',
+                              },
                               message: 'Todavía no hay partidos de KBO para ese día.',
                             )
                           : RefreshIndicator(
