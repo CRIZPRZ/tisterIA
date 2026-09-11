@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firma de release — key.properties tiene las passwords del keystore, el
+# .jks es la clave misma. Ninguno de los dos debe subirse jamás: sin el
+# .jks original no se puede volver a publicar una actualización de la app
+# en Play Store (hazle backup fuera del repo, ej. gestor de contraseñas).
+/android/key.properties
+/android/*.jks
+/android/*.keystore

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="tipster_ia"
+        android:label="Tipster IA"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -30,11 +30,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- App ID de PRUEBA oficial de Google. Cuando crees tu cuenta AdMob,
-             cámbialo por el App ID real de tu app (AdMob console → Apps → tu app → App ID). -->
+        <!-- App ID real de AdMob (Tipster IA, Android). -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-2698512492994710~6683815038" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
