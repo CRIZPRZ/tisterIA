@@ -80,11 +80,9 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                       children: [
                         Text('${game.matchDate} · ${game.time}', style: AppText.style(12, color: AppColors.textFaint)),
                         const Spacer(),
-                        Pill(
-                          label: isFinished ? 'FINAL' : game.status,
-                          color: AppColors.textMuted,
-                          background: AppColors.greyTint,
-                        ),
+                        isFinished
+                            ? Pill(label: 'FINAL', color: AppColors.textMuted, background: AppColors.greyTint)
+                            : Pill(label: 'PROGRAMADO', color: AppColors.yellow, background: AppColors.yellow.withValues(alpha: 0.16)),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -148,12 +146,14 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                   label: 'Ganador probable',
                   value: _prediction!.favorite,
                   prob: _prediction!.probFavorite,
+                  hit: isFinished ? _moneylineHit(game, _prediction!) : null,
                 ),
                 const SizedBox(height: 10),
                 _predictionRow(
                   label: 'Total de carreras',
-                  value: 'Más de ${_prediction!.runLine}',
-                  prob: _prediction!.probOver,
+                  value: _prediction!.probOver >= 0.5 ? 'Más de ${_prediction!.runLine}' : 'Menos de ${_prediction!.runLine}',
+                  prob: _prediction!.probOver >= 0.5 ? _prediction!.probOver : 1 - _prediction!.probOver,
+                  hit: isFinished ? _totalHit(game, _prediction!) : null,
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -168,7 +168,8 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
     );
   }
 
-  Widget _predictionRow({required String label, required String value, required double prob}) {
+  // hit == null: partido no terminado, sin veredicto todavía.
+  Widget _predictionRow({required String label, required String value, required double prob, bool? hit}) {
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -183,9 +184,30 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
               ],
             ),
           ),
+          if (hit != null) ...[
+            Pill(
+              label: hit ? 'ACIERTO' : 'FALLO',
+              color: hit ? AppColors.green : AppColors.red,
+              background: (hit ? AppColors.green : AppColors.red).withValues(alpha: 0.16),
+            ),
+            const SizedBox(width: 10),
+          ],
           Text('${(prob * 100).round()}%', style: AppText.style(20, weight: FontWeight.w800, color: AppColors.green)),
         ],
       ),
     );
+  }
+
+  bool _moneylineHit(BaseballGame game, KboPrediction prediction) {
+    final homeWon = (game.homeScore ?? 0) > (game.awayScore ?? 0);
+    final actualWinner = homeWon ? game.teamA : game.teamB;
+    return prediction.favorite == actualWinner;
+  }
+
+  bool _totalHit(BaseballGame game, KboPrediction prediction) {
+    final actualTotal = (game.homeScore ?? 0) + (game.awayScore ?? 0);
+    final predictedOver = prediction.probOver >= 0.5;
+    final wentOver = actualTotal > prediction.runLine;
+    return predictedOver == wentOver;
   }
 }
