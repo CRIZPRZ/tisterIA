@@ -15,13 +15,23 @@ import 'screens/onboarding_screen.dart';
 import 'screens/paywall_screen.dart';
 import 'screens/privacy_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/kbo_detail_screen.dart';
+import 'screens/kbo_results_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/shot_map_demo_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/team_history_screen.dart';
+import 'screens/team_picker_screen.dart';
+import 'screens/terms_doc_screen.dart';
+import 'screens/terms_gate_screen.dart';
+import 'services/api_config.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiConfig.load();
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState(),
@@ -71,13 +81,26 @@ class RootScreen extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.screenBg,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(child: _currentScreen(state.screen)),
-              if (showNav) const BottomNav(),
-            ],
-          ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SafeArea(
+                bottom: !showNav,
+                // antes cambiaba de golpe (switch sin transición) — un
+                // crossfade simple es la diferencia entre "se siente
+                // pagada" y "se siente tutorial", sin tocar la lógica de
+                // navegación (sigue siendo el mismo switch por enum).
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                  child: KeyedSubtree(key: ValueKey(state.screen), child: _currentScreen(state.screen)),
+                ),
+              ),
+            ),
+            if (showNav) const BottomNav(),
+          ],
         ),
       ),
     );
@@ -117,6 +140,22 @@ class RootScreen extends StatelessWidget {
         return const LeaguesScreen();
       case AppScreen.chatPicker:
         return const ChatPickerScreen();
+      case AppScreen.termsGate:
+        return const TermsGateScreen();
+      case AppScreen.termsDoc:
+        return const TermsDocScreen();
+      case AppScreen.privacyDoc:
+        return const PrivacyScreen(backTo: AppScreen.termsGate);
+      case AppScreen.teamHistory:
+        return const TeamHistoryScreen();
+      case AppScreen.teamPicker:
+        return const TeamPickerScreen();
+      case AppScreen.shotMapDemo:
+        return const ShotMapDemoScreen();
+      case AppScreen.kboResults:
+        return const KboResultsScreen();
+      case AppScreen.kboDetail:
+        return const KboDetailScreen();
     }
   }
 }

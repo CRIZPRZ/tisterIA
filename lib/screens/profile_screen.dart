@@ -182,6 +182,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
+              // Solo tú (dueño de la app) ves estas dos — demo interna y
+              // KBO son para probar/decidir, no para usuarios reales.
+              if (state.currentUser?.isAdmin == true) ...[
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  onTap: () => context.read<AppState>().go(AppScreen.shotMapDemo),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Demo: mapa de disparos (simulado)', style: AppText.style(13.5, weight: FontWeight.w500, color: AppColors.textMuted)),
+                      const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  onTap: () => context.read<AppState>().go(AppScreen.kboResults),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('KBO — Resultados (beta)', style: AppText.style(13.5, weight: FontWeight.w500, color: AppColors.textMuted)),
+                      const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

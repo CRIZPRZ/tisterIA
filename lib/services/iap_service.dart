@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import 'api_client.dart';
 import 'auth_service.dart';
+import 'retry.dart';
 
 class IapVerifyResult {
   final String plan;
@@ -30,7 +32,7 @@ class IapService {
   static const Set<String> _productIds = {'premium_monthly', 'pro_monthly'};
 
   final InAppPurchase _iap = InAppPurchase.instance;
-  final Dio _dio = Dio(BaseOptions(baseUrl: kApiBaseUrl, connectTimeout: const Duration(seconds: 10)));
+  final Dio _dio = apiClient;
   StreamSubscription<List<PurchaseDetails>>? _sub;
 
   /// Callbacks que AppState conecta para reaccionar a compras/errores.
@@ -63,7 +65,9 @@ class IapService {
   /// Re-verifica la última compra conocida contra Google Play (detecta
   /// cancelaciones/vencimientos sin necesitar webhooks). Se llama al abrir la app.
   Future<IapVerifyResult> fetchStatus() async {
-    final res = await _dio.get('/iap/status', options: Options(headers: await AuthService.instance.authHeader()));
+    final res = await withRetry(
+      () async => _dio.get('/iap/status', options: Options(headers: await AuthService.instance.authHeader())),
+    );
     return IapVerifyResult.fromJson(res.data as Map<String, dynamic>);
   }
 

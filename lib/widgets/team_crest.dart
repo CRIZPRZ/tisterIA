@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -51,10 +52,12 @@ class TeamCrest extends StatelessWidget {
         height: size,
         color: Colors.white,
         padding: EdgeInsets.all(size * 0.1),
-        child: Image.network(
-          logoUrl!,
+        child: CachedNetworkImage(
+          imageUrl: logoUrl!,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _fallback(),
+          fadeInDuration: Duration.zero,
+          placeholder: (_, __) => _fallback(),
+          errorWidget: (_, __, ___) => _fallback(),
         ),
       ),
     );

@@ -1,24 +1,29 @@
 import 'package:dio/dio.dart';
+import 'api_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// iOS simulator: localhost funciona directo.
-/// Emulador Android: cambia a http://10.0.2.2:8000 (localhost del host, no del emulador).
-/// Dispositivo físico: usa la IP LAN de tu máquina.
-const String kApiBaseUrl = 'http://localhost:8000';
+import 'api_config.dart';
+
+/// Producción (droplet real) o Local (Mac de desarrollo) — elegible desde
+/// el login (mantén presionado el logo) y persistido en el dispositivo.
+/// Ver `ApiConfig`.
+String get kApiBaseUrl => ApiConfig.baseUrl;
 
 class AuthUser {
   final String id;
   final String name;
   final String email;
   final String plan;
+  final bool isAdmin;
 
-  const AuthUser({required this.id, required this.name, required this.email, required this.plan});
+  const AuthUser({required this.id, required this.name, required this.email, required this.plan, this.isAdmin = false});
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
         id: json['id'] as String,
         name: json['name'] as String,
         email: json['email'] as String,
         plan: json['plan'] as String,
+        isAdmin: json['isAdmin'] as bool? ?? false,
       );
 }
 
@@ -55,7 +60,7 @@ class AuthService {
 
   static final AuthService instance = AuthService._internal();
 
-  final Dio _dio = Dio(BaseOptions(baseUrl: kApiBaseUrl, connectTimeout: const Duration(seconds: 10)));
+  final Dio _dio = apiClient;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   static const _accessKey = 'tipster_access_token';

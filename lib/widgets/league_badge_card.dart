@@ -10,7 +10,14 @@ class LeagueBadgeCard extends StatelessWidget {
   final String league;
   final bool active;
   final VoidCallback onTap;
-  const LeagueBadgeCard({super.key, required this.league, required this.active, required this.onTap});
+  final VoidCallback? onPickTeam;
+  const LeagueBadgeCard({
+    super.key,
+    required this.league,
+    required this.active,
+    required this.onTap,
+    this.onPickTeam,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +59,29 @@ class LeagueBadgeCard extends StatelessWidget {
               ),
               child: TeamCrest(name: league, size: 56, logoUrl: leagueLogoUrl(league)),
             ),
+            // declarado DESPUÉS del escudo a propósito — en un Stack pinta
+            // (y recibe el toque) lo último en la lista; antes estaba antes
+            // del escudo y el toque le llegaba al favorito de LIGA en vez
+            // de abrir el selector de equipo.
+            if (onPickTeam != null)
+              Positioned(
+                top: 34,
+                left: 34,
+                child: GestureDetector(
+                  onTap: onPickTeam,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A332F),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.screenBg, width: 2),
+                    ),
+                    child: const Icon(Icons.star_border_rounded, size: 13, color: Color(0xFF95A09A)),
+                  ),
+                ),
+              ),
             if (active)
               Positioned(
                 top: 34,

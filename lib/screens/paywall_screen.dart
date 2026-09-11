@@ -26,6 +26,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+    // el % real de acierto es el argumento de venta — mejor que cualquier
+    // texto de marketing, porque nadie más lo mide así (ver Historial).
+    if (context.read<AppState>().accuracy == null) {
+      context.read<AppState>().loadAccuracy();
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -120,6 +125,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(22, 12, 22, 40),
             children: [
+              if (state.accuracy != null && state.accuracy!.overallTotal > 0) ...[
+                _AccuracyProof(pct: state.accuracy!.overallPct, total: state.accuracy!.overallTotal),
+                const SizedBox(height: 18),
+              ],
+              const _ComparisonTable(),
+              const SizedBox(height: 20),
               ...kPlans.map((p) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: _PlanCard(
@@ -250,6 +261,125 @@ class _PlanCard extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// El % de acierto real (el mismo que ves en Historial, nunca inflado) —
+/// mejor argumento de venta que cualquier texto de marketing, porque es
+/// verificable dentro de la misma app.
+class _AccuracyProof extends StatelessWidget {
+  final int pct;
+  final int total;
+  const _AccuracyProof({required this.pct, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: AppColors.greenTint,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.green.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Text('$pct%', style: AppText.style(34, weight: FontWeight.w800, color: AppColors.green)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Acierto real medido', style: AppText.style(13, weight: FontWeight.w700, color: Colors.white)),
+                const SizedBox(height: 3),
+                Text(
+                  'Sobre $total picks calificados — no un número de marketing, es el mismo que ves en tu Historial.',
+                  style: AppText.style(11, color: AppColors.textMuted, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Free vs Premium lado a lado — reduce fricción de decisión mejor que la
+/// lista de checks repetida en cada card.
+class _ComparisonTable extends StatelessWidget {
+  const _ComparisonTable();
+
+  static const _rows = [
+    ('Partidos por día', '2', 'Ilimitados'),
+    ('Mercados por partido', 'Solo 1X2', 'Todos'),
+    ('Marcador probable + %', '—', '✓'),
+    ('Chat IA', '5 mensajes/día', 'Ilimitado'),
+    ('Notificaciones de gol/alineación', '—', '✓'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    Widget headerCell(String text, {Color? color}) => Expanded(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: AppText.style(11.5, weight: FontWeight.w700, color: color ?? AppColors.textMuted),
+          ),
+        );
+
+    Widget cell(String text, {bool isCheck = false}) => Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: isCheck
+                ? Icon(
+                    text == '✓' ? Icons.check_rounded : Icons.remove_rounded,
+                    size: 16,
+                    color: text == '✓' ? AppColors.green : AppColors.textFaint,
+                  )
+                : Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: AppText.style(11.5, weight: FontWeight.w600, color: text == '—' ? AppColors.textFaint : Colors.white),
+                  ),
+          ),
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const Expanded(flex: 2, child: SizedBox.shrink()),
+                headerCell('FREE'),
+                headerCell('PREMIUM', color: AppColors.green),
+              ],
+            ),
+          ),
+          for (var i = 0; i < _rows.length; i++) ...[
+            if (i > 0) const Divider(color: AppColors.cardBorder, height: 1),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(_rows[i].$1, style: AppText.style(11.5, color: AppColors.textBody)),
+                ),
+                cell(_rows[i].$2, isCheck: _rows[i].$2 == '—'),
+                cell(_rows[i].$3, isCheck: _rows[i].$3 == '✓'),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

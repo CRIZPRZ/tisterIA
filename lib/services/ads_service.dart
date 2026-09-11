@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// ID de rewarded ad de PRUEBA oficial de Google — nunca genera cobros/ingresos
-/// reales y siempre tiene fill. Cuando crees tu cuenta AdMob, cámbialo por
-/// el ID real del ad unit (AdMob console → tu app → Ad units → Rewarded).
-const _kTestRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
+/// Ad unit real de AdMob (Rewarded, Android) — cuenta en revisión: no
+/// mostrará anuncios reales hasta que AdMob apruebe la app y la unidad
+/// (puede tardar hasta ~1h desde su creación, o más si la app sigue en
+/// revisión).
+const _kRewardedAdUnitId = 'ca-app-pub-2698512492994710/7918829481';
 
 class AdsService {
   AdsService._internal();
@@ -23,7 +24,7 @@ class AdsService {
 
   void _preload() {
     RewardedAd.load(
-      adUnitId: _kTestRewardedAdUnitId,
+      adUnitId: _kRewardedAdUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) => _ad = ad,

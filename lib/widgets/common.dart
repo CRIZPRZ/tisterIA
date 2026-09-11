@@ -2,6 +2,54 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
+class PulseDot extends StatefulWidget {
+  const PulseDot({super.key});
+
+  @override
+  State<PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 14,
+      height: 14,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final t = _controller.value;
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: (1 - t).clamp(0, 1),
+                child: Container(
+                  width: 6 + 8 * t,
+                  height: 6 + 8 * t,
+                  decoration: const BoxDecoration(color: AppColors.red, shape: BoxShape.circle),
+                ),
+              ),
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.red, shape: BoxShape.circle)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
 class BackButtonCircle extends StatelessWidget {
   final VoidCallback onTap;
   const BackButtonCircle({super.key, required this.onTap});

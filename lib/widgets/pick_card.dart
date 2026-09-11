@@ -183,7 +183,9 @@ class PickCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            ProbRing(pct: pick.prob, size: 52, strokeWidth: 4.5, fontSize: 14),
+            pick.hasNoPrediction
+                ? const Icon(Icons.help_outline_rounded, size: 28, color: AppColors.textFaint)
+                : ProbRing(pct: pick.prob, size: 52, strokeWidth: 4.5, fontSize: 14),
           ],
         ),
         const SizedBox(height: 12),
@@ -207,12 +209,19 @@ class PickCard extends StatelessWidget {
         const SizedBox(height: 10),
         Align(
           alignment: Alignment.centerRight,
-          child: Pill(
-            label: confLabel(pick.confidence),
-            color: confColor(pick.confidence),
-            background: confColor(pick.confidence).withValues(alpha: 0.16),
-            uppercase: true,
-          ),
+          child: pick.hit != null
+              ? Pill(
+                  label: pick.hit! ? 'Acierto' : 'Fallo',
+                  color: pick.hit! ? AppColors.green : AppColors.red,
+                  background: (pick.hit! ? AppColors.green : AppColors.red).withValues(alpha: 0.16),
+                  uppercase: true,
+                )
+              : Pill(
+                  label: confLabel(pick.confidence),
+                  color: confColor(pick.confidence),
+                  background: confColor(pick.confidence).withValues(alpha: 0.16),
+                  uppercase: true,
+                ),
         ),
       ],
     );

@@ -1,15 +1,19 @@
 import 'package:dio/dio.dart';
+import 'api_client.dart';
 
 import 'auth_service.dart';
+import 'retry.dart';
 
 class NotificationsService {
   NotificationsService._internal();
   static final NotificationsService instance = NotificationsService._internal();
 
-  final Dio _dio = Dio(BaseOptions(baseUrl: kApiBaseUrl, connectTimeout: const Duration(seconds: 10)));
+  final Dio _dio = apiClient;
 
   Future<Map<String, bool>> fetchPrefs() async {
-    final res = await _dio.get('/notifications/prefs', options: Options(headers: await AuthService.instance.authHeader()));
+    final res = await withRetry(
+      () async => _dio.get('/notifications/prefs', options: Options(headers: await AuthService.instance.authHeader())),
+    );
     return (res.data as Map<String, dynamic>).map((k, v) => MapEntry(k, v as bool));
   }
 

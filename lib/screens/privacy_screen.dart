@@ -6,14 +6,15 @@ import '../theme/app_theme.dart';
 import '../widgets/common.dart';
 
 class PrivacyScreen extends StatelessWidget {
-  const PrivacyScreen({super.key});
+  final AppScreen backTo;
+  const PrivacyScreen({super.key, this.backTo = AppScreen.settings});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         ScreenHeader(
-          onBack: () => context.read<AppState>().go(AppScreen.settings),
+          onBack: () => context.read<AppState>().go(backTo),
           title: 'Privacidad y términos',
         ),
         Expanded(

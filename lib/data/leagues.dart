@@ -6,6 +6,7 @@ const kLeagueIds = {
   'La Liga': 140,
   'Champions League': 2,
   'MLS': 253,
+  'Leagues Cup': 772,
 };
 
 final kLeagues = kLeagueIds.keys.toList();

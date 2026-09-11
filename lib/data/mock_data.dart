@@ -3,7 +3,7 @@ import '../models/pick.dart';
 const kPlans = <Plan>[
   Plan(
     id: 'free', name: 'Free', price: '\$0', period: 'MXN / mes',
-    features: ['5 partidos gratis por día', '5 mensajes de chat IA por día', 'Análisis básico (1X2)'],
+    features: ['2 partidos gratis por día', '5 mensajes de chat IA por día', 'Análisis básico (1X2)'],
   ),
   Plan(
     id: 'premium', name: 'Premium', price: '\$149', period: 'MXN / mes',

@@ -11,18 +11,19 @@ class BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: const EdgeInsets.only(top: 10, bottom: 24),
+      padding: EdgeInsets.fromLTRB(0, 8, 0, bottomInset > 0 ? bottomInset : 10),
       decoration: const BoxDecoration(
-        color: AppColors.screenBg,
-        border: Border(top: BorderSide(color: AppColors.divider)),
+        color: Color(0xFF171C22),
+        border: Border(top: BorderSide(color: Color(0xFF272D35))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _NavItem(
             icon: Icons.home_rounded,
-            label: 'Home',
+            label: 'Inicio',
             active: state.screen == AppScreen.home,
             onTap: () => context.read<AppState>().go(AppScreen.home),
           ),
@@ -69,13 +70,38 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 19, color: color),
-          const SizedBox(height: 4),
-          Text(label, style: AppText.style(10, weight: FontWeight.w600, color: color)),
-        ],
+      child: SizedBox(
+        width: 74,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 160),
+              opacity: active ? 1 : 0,
+              child: Container(
+                width: 44,
+                height: 2.5,
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.green,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.green.withValues(alpha: 0.55),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Icon(icon, size: 23, color: color),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: AppText.style(10.5, weight: FontWeight.w500, color: color),
+            ),
+          ],
+        ),
       ),
     );
   }

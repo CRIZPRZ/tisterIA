@@ -24,7 +24,7 @@ class LeaguePreferencesScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Elige las ligas que quieres ver primero en tu feed.',
+                  'Elige las ligas que quieres ver primero en tu feed. Toca la estrella para elegir tus equipos favoritos de esa liga — sus partidos avisan solos, jueguen el torneo que jueguen.',
                   style: AppText.style(12.5, color: AppColors.textMuted, height: 1.4),
                 ),
                 const SizedBox(height: 24),
@@ -39,6 +39,7 @@ class LeaguePreferencesScreen extends StatelessWidget {
                           league: entry.key,
                           active: active,
                           onTap: () => context.read<AppState>().toggleFavoriteLeague(entry.value),
+                          onPickTeam: () => context.read<AppState>().openTeamPicker(entry.value, entry.key),
                         );
                       }).toList(),
                     ),

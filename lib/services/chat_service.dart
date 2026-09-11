@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'api_client.dart';
 
 import '../models/chat.dart';
 import 'auth_service.dart';
@@ -39,7 +40,7 @@ class ChatService {
 
   static final ChatService instance = ChatService._internal();
 
-  final Dio _dio = Dio(BaseOptions(baseUrl: kApiBaseUrl, connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 30)));
+  final Dio _dio = apiClient;
 
   Future<ChatReply> sendMessage(String pickId, String message) async {
     try {

@@ -193,7 +193,8 @@ class ChatInputBar extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final String hint;
-  const ChatInputBar({super.key, required this.controller, required this.onSend, required this.hint});
+  final bool enabled;
+  const ChatInputBar({super.key, required this.controller, required this.onSend, required this.hint, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
@@ -208,9 +209,10 @@ class ChatInputBar extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              enabled: enabled,
               style: AppText.style(13),
               cursorColor: Colors.white,
-              onSubmitted: (_) => onSend(),
+              onSubmitted: enabled ? (_) => onSend() : null,
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: AppText.style(12, color: AppColors.textMuted),
@@ -234,12 +236,12 @@ class ChatInputBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: onSend,
+            onTap: enabled ? onSend : null,
             child: Container(
               width: 42,
               height: 42,
-              decoration: const BoxDecoration(color: AppColors.green, shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_upward_rounded, size: 20, color: Color(0xFF0A0A0B)),
+              decoration: BoxDecoration(color: enabled ? AppColors.green : AppColors.cardBorder, shape: BoxShape.circle),
+              child: Icon(Icons.arrow_upward_rounded, size: 20, color: enabled ? const Color(0xFF0A0A0B) : AppColors.textMuted),
             ),
           ),
         ],
