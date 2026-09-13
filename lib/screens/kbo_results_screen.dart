@@ -219,6 +219,27 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
                     ),
                 ],
               ),
+              if (prediction.runLine != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.sports_baseball_rounded, size: 14, color: AppColors.textFaint),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${prediction.runSide == 'over' ? 'Más' : 'Menos'} de ${prediction.runLine} carreras · ${((prediction.probRunTotal ?? 0) * 100).round()}%',
+                        style: AppText.style(12, weight: FontWeight.w700, color: AppColors.textMuted),
+                      ),
+                    ),
+                    if (prediction.runTotalHit != null)
+                      Pill(
+                        label: prediction.runTotalHit! ? 'ACIERTO' : 'FALLO',
+                        color: prediction.runTotalHit! ? AppColors.green : AppColors.red,
+                        background: (prediction.runTotalHit! ? AppColors.green : AppColors.red).withValues(alpha: 0.16),
+                      ),
+                  ],
+                ),
+              ],
             ],
           ],
         ),

@@ -75,13 +75,30 @@ class KboBatchPrediction {
   final String favorite;
   final double probFavorite;
   final bool? hit;
+  final double? runLine;
+  final String? runSide; // "over" | "under"
+  final double? probRunTotal;
+  final bool? runTotalHit;
 
-  const KboBatchPrediction({required this.gameId, required this.favorite, required this.probFavorite, this.hit});
+  const KboBatchPrediction({
+    required this.gameId,
+    required this.favorite,
+    required this.probFavorite,
+    this.hit,
+    this.runLine,
+    this.runSide,
+    this.probRunTotal,
+    this.runTotalHit,
+  });
 
   factory KboBatchPrediction.fromJson(Map<String, dynamic> json) => KboBatchPrediction(
         gameId: json['gameId'] as int,
         favorite: json['favorite'] as String,
         probFavorite: (json['probFavorite'] as num).toDouble(),
         hit: json['hit'] as bool?,
+        runLine: (json['runLine'] as num?)?.toDouble(),
+        runSide: json['runSide'] as String?,
+        probRunTotal: (json['probRunTotal'] as num?)?.toDouble(),
+        runTotalHit: json['runTotalHit'] as bool?,
       );
 }
