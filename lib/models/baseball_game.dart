@@ -46,12 +46,25 @@ class BaseballGame {
       );
 }
 
+class KboRunTotalOption {
+  final double line;
+  final double probOver;
+
+  const KboRunTotalOption({required this.line, required this.probOver});
+
+  factory KboRunTotalOption.fromJson(Map<String, dynamic> json) => KboRunTotalOption(
+        line: (json['line'] as num).toDouble(),
+        probOver: (json['probOver'] as num).toDouble(),
+      );
+}
+
 class KboPrediction {
   final String favorite;
   final double probFavorite;
   final double runLine;
   final double probOver;
   final int sampleMin;
+  final List<KboRunTotalOption> runTotalOptions;
 
   const KboPrediction({
     required this.favorite,
@@ -59,6 +72,7 @@ class KboPrediction {
     required this.runLine,
     required this.probOver,
     required this.sampleMin,
+    this.runTotalOptions = const [],
   });
 
   factory KboPrediction.fromJson(Map<String, dynamic> json) => KboPrediction(
@@ -67,6 +81,9 @@ class KboPrediction {
         runLine: (json['runLine'] as num).toDouble(),
         probOver: (json['probOver'] as num).toDouble(),
         sampleMin: json['sampleMin'] as int,
+        runTotalOptions: (json['runTotalOptions'] as List? ?? [])
+            .map((e) => KboRunTotalOption.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 }
 

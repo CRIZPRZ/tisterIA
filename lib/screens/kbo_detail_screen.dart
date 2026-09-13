@@ -148,13 +148,59 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                   prob: _prediction!.probFavorite,
                   hit: isFinished ? _moneylineHit(game, _prediction!) : null,
                 ),
+                const SizedBox(height: 20),
+                Text('TOTAL DE CARRERAS — TODAS LAS LÍNEAS', style: AppText.style(11.5, weight: FontWeight.w800, color: AppColors.textFaint, letterSpacing: 0.6)),
                 const SizedBox(height: 10),
-                _predictionRow(
-                  label: 'Total de carreras',
-                  value: _prediction!.probOver >= 0.5 ? 'Más de ${_prediction!.runLine}' : 'Menos de ${_prediction!.runLine}',
-                  prob: _prediction!.probOver >= 0.5 ? _prediction!.probOver : 1 - _prediction!.probOver,
-                  hit: isFinished ? _totalHit(game, _prediction!) : null,
-                ),
+                if (_prediction!.runTotalOptions.isEmpty)
+                  _predictionRow(
+                    label: 'Total de carreras',
+                    value: _prediction!.probOver >= 0.5 ? 'Más de ${_prediction!.runLine}' : 'Menos de ${_prediction!.runLine}',
+                    prob: _prediction!.probOver >= 0.5 ? _prediction!.probOver : 1 - _prediction!.probOver,
+                    hit: isFinished ? _totalHit(game, _prediction!) : null,
+                  )
+                else
+                  AppCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: _prediction!.runTotalOptions.map((opt) {
+                        final isBest = opt.line == _prediction!.runLine;
+                        final hit = isFinished
+                            ? (opt.probOver >= 0.5) == (((game.homeScore ?? 0) + (game.awayScore ?? 0)) > opt.line)
+                            : null;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isBest ? AppColors.green.withValues(alpha: 0.08) : null,
+                            border: opt == _prediction!.runTotalOptions.last ? null : const Border(bottom: BorderSide(color: AppColors.greyTint, width: 1)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Text('Más de ${opt.line}', style: AppText.style(13.5, weight: isBest ? FontWeight.w800 : FontWeight.w500)),
+                                    if (isBest) ...[
+                                      const SizedBox(width: 8),
+                                      Pill(label: 'MEJOR', color: AppColors.green, background: AppColors.green.withValues(alpha: 0.16)),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (hit != null) ...[
+                                Pill(
+                                  label: hit ? 'ACIERTO' : 'FALLO',
+                                  color: hit ? AppColors.green : AppColors.red,
+                                  background: (hit ? AppColors.green : AppColors.red).withValues(alpha: 0.16),
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                              Text('${(opt.probOver * 100).round()}%', style: AppText.style(15, weight: FontWeight.w800, color: AppColors.textMuted)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 const SizedBox(height: 10),
                 Text(
                   'Basado en las últimas ${_prediction!.sampleMin} muestras de cada equipo — probabilidades, no apuestas.',
