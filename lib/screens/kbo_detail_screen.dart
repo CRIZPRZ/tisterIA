@@ -164,8 +164,15 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                     child: Column(
                       children: _prediction!.runTotalOptions.map((opt) {
                         final isBest = opt.line == _prediction!.runLine;
+                        // El lado REALMENTE favorito de esta línea — antes
+                        // siempre decía "Más de" con probOver crudo, aunque
+                        // probOver<50% significa que "Menos" es lo que en
+                        // realidad pinta más probable para esa línea.
+                        final favorsOver = opt.probOver >= 0.5;
+                        final sideLabel = favorsOver ? 'Más' : 'Menos';
+                        final sideProb = favorsOver ? opt.probOver : 1 - opt.probOver;
                         final hit = isFinished
-                            ? (opt.probOver >= 0.5) == (((game.homeScore ?? 0) + (game.awayScore ?? 0)) > opt.line)
+                            ? favorsOver == (((game.homeScore ?? 0) + (game.awayScore ?? 0)) > opt.line)
                             : null;
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -178,7 +185,7 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                               Expanded(
                                 child: Row(
                                   children: [
-                                    Text('Más de ${opt.line}', style: AppText.style(13.5, weight: isBest ? FontWeight.w800 : FontWeight.w500)),
+                                    Text('$sideLabel de ${opt.line}', style: AppText.style(13.5, weight: isBest ? FontWeight.w800 : FontWeight.w500)),
                                     if (isBest) ...[
                                       const SizedBox(width: 8),
                                       Pill(label: 'MEJOR', color: AppColors.green, background: AppColors.green.withValues(alpha: 0.16)),
@@ -194,7 +201,7 @@ class _KboDetailScreenState extends State<KboDetailScreen> {
                                 ),
                                 const SizedBox(width: 10),
                               ],
-                              Text('${(opt.probOver * 100).round()}%', style: AppText.style(15, weight: FontWeight.w800, color: AppColors.textMuted)),
+                              Text('${(sideProb * 100).round()}%', style: AppText.style(15, weight: FontWeight.w800, color: AppColors.textMuted)),
                             ],
                           ),
                         );
