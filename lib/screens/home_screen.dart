@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SizedBox(
-                  height: 228,
+                  height: 236,
                   child: PageView.builder(
                     controller: _heroController,
                     clipBehavior: Clip.none,
