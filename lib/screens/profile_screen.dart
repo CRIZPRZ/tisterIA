@@ -149,18 +149,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
               AppCard(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                onTap: () => context.read<AppState>().go(AppScreen.leaguePreferences),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Ligas favoritas', style: AppText.style(13.5, weight: FontWeight.w500)),
-                    const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              AppCard(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 onTap: () => context.read<AppState>().go(AppScreen.notifications),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -30,7 +30,11 @@ class LiveClockAnchor {
   final int minute;
   final int? extra;
   final DateTime capturedAt;
-  const LiveClockAnchor({required this.minute, required this.extra, required this.capturedAt});
+  const LiveClockAnchor({
+    required this.minute,
+    required this.extra,
+    required this.capturedAt,
+  });
 }
 
 enum AppScreen {
@@ -85,7 +89,7 @@ AppScreen? backTargetFor(AppScreen screen) {
     case AppScreen.teamHistory:
       return AppScreen.home;
     case AppScreen.teamPicker:
-      return AppScreen.leaguePreferences;
+      return AppScreen.leagues;
     case AppScreen.shotMapDemo:
       return AppScreen.profile;
     case AppScreen.kboResults:
@@ -112,6 +116,7 @@ class AppState extends ChangeNotifier {
   // una notificación de alineación confirmada) — DetailScreen la consume
   // y la limpia, para no re-disparar en cada rebuild.
   int? pendingDetailTabIndex;
+  AppScreen detailReturnScreen = AppScreen.home;
 
   static const _notifTabIndex = {'alineacion': 1};
 
@@ -122,14 +127,20 @@ class AppState extends ChangeNotifier {
     if (!allPicks.any((p) => p.id == pickId)) {
       await loadPicks();
     }
-    if (!allPicks.any((p) => p.id == pickId)) return; // fixture ya no disponible
+    if (!allPicks.any((p) => p.id == pickId))
+      return; // fixture ya no disponible
     await openDetail(pickId, tabIndex: _notifTabIndex[type]);
   }
 
-  String? homeLeagueFilter;
+  /// Ligas elegidas desde la pestaña Ligas. Vacío significa mostrar todas.
+  final Set<int> homeLeagueFilter = {};
 
-  void setHomeLeagueFilter(String? league) {
-    homeLeagueFilter = league;
+  void setHomeLeagueFilter(int leagueId) {
+    if (homeLeagueFilter.contains(leagueId)) {
+      homeLeagueFilter.remove(leagueId);
+    } else {
+      homeLeagueFilter.add(leagueId);
+    }
     notifyListeners();
   }
 
@@ -175,29 +186,36 @@ class AppState extends ChangeNotifier {
     teamHistoryStatsLoading = leagueId != null;
     screen = AppScreen.teamHistory;
     notifyListeners();
-    TeamService.instance.fetchMatches(teamId).then((matches) {
-      if (teamHistoryId != teamId) return; // el usuario ya navegó a otro equipo
-      teamHistoryMatches = matches;
-      teamHistoryLoading = false;
-      notifyListeners();
-    }).catchError((_) {
-      if (teamHistoryId != teamId) return;
-      teamHistoryLoading = false;
-      notifyListeners();
-    });
+    TeamService.instance
+        .fetchMatches(teamId)
+        .then((matches) {
+          if (teamHistoryId != teamId)
+            return; // el usuario ya navegó a otro equipo
+          teamHistoryMatches = matches;
+          teamHistoryLoading = false;
+          notifyListeners();
+        })
+        .catchError((_) {
+          if (teamHistoryId != teamId) return;
+          teamHistoryLoading = false;
+          notifyListeners();
+        });
     if (leagueId != null) {
-      TeamService.instance.fetchStats(teamId, leagueId).then((stats) {
-        if (teamHistoryId != teamId) return;
-        teamHistoryStats = stats;
-        teamHistoryStatsLoading = false;
-        notifyListeners();
-      }).catchError((_) {
-        if (teamHistoryId != teamId) return;
-        // silencioso — no todos los equipos tienen stats todavía (temporada
-        // recién empezada), no debe verse como un error de red
-        teamHistoryStatsLoading = false;
-        notifyListeners();
-      });
+      TeamService.instance
+          .fetchStats(teamId, leagueId)
+          .then((stats) {
+            if (teamHistoryId != teamId) return;
+            teamHistoryStats = stats;
+            teamHistoryStatsLoading = false;
+            notifyListeners();
+          })
+          .catchError((_) {
+            if (teamHistoryId != teamId) return;
+            // silencioso — no todos los equipos tienen stats todavía (temporada
+            // recién empezada), no debe verse como un error de red
+            teamHistoryStatsLoading = false;
+            notifyListeners();
+          });
     }
   }
 
@@ -215,23 +233,27 @@ class AppState extends ChangeNotifier {
     teamPickerError = false;
     screen = AppScreen.teamPicker;
     notifyListeners();
-    TeamService.instance.fetchByLeague(leagueId).then((teams) {
-      if (teamPickerLeagueId != leagueId) return; // ya navegó a otra liga
-      teamPickerOptions = teams;
-      teamPickerLoading = false;
-      notifyListeners();
-    }).catchError((_) {
-      if (teamPickerLeagueId != leagueId) return;
-      teamPickerLoading = false;
-      teamPickerError = true;
-      notifyListeners();
-    });
+    TeamService.instance
+        .fetchByLeague(leagueId)
+        .then((teams) {
+          if (teamPickerLeagueId != leagueId) return; // ya navegó a otra liga
+          teamPickerOptions = teams;
+          teamPickerLoading = false;
+          notifyListeners();
+        })
+        .catchError((_) {
+          if (teamPickerLeagueId != leagueId) return;
+          teamPickerLoading = false;
+          teamPickerError = true;
+          notifyListeners();
+        });
   }
 
   Set<int> followedFixtureIds = {};
   final Set<int> _followInFlight = {};
 
-  bool isFollowing(Pick pick) => pick.fixtureId != null && followedFixtureIds.contains(pick.fixtureId);
+  bool isFollowing(Pick pick) =>
+      pick.fixtureId != null && followedFixtureIds.contains(pick.fixtureId);
 
   Future<void> toggleFollow(Pick pick) async {
     final fixtureId = pick.fixtureId;
@@ -251,7 +273,10 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
     try {
-      final following = await FollowsService.instance.setFollowing(pick.id, desired);
+      final following = await FollowsService.instance.setFollowing(
+        pick.id,
+        desired,
+      );
       if (following != desired) {
         // el backend dijo algo distinto a lo que asumimos — nos alineamos
         if (following) {
@@ -294,8 +319,14 @@ class AppState extends ChangeNotifier {
       if (!p.isLive || p.liveMinute == null) continue;
       liveIds.add(p.id);
       final existing = _liveAnchors[p.id];
-      if (existing == null || existing.minute != p.liveMinute || existing.extra != p.liveExtra) {
-        _liveAnchors[p.id] = LiveClockAnchor(minute: p.liveMinute!, extra: p.liveExtra, capturedAt: DateTime.now());
+      if (existing == null ||
+          existing.minute != p.liveMinute ||
+          existing.extra != p.liveExtra) {
+        _liveAnchors[p.id] = LiveClockAnchor(
+          minute: p.liveMinute!,
+          extra: p.liveExtra,
+          capturedAt: DateTime.now(),
+        );
       }
     }
     _liveAnchors.removeWhere((id, _) => !liveIds.contains(id));
@@ -314,8 +345,9 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  List<Pick> picksForMatch(String teamA, String teamB, String time) =>
-      allPicks.where((p) => p.teamA == teamA && p.teamB == teamB && p.time == time).toList();
+  List<Pick> picksForMatch(String teamA, String teamB, String time) => allPicks
+      .where((p) => p.teamA == teamA && p.teamB == teamB && p.time == time)
+      .toList();
 
   AccuracySummary? accuracy;
   bool accuracyLoading = false;
@@ -326,7 +358,10 @@ class AppState extends ChangeNotifier {
     accuracyError = false;
     notifyListeners();
     try {
-      accuracy = await AccuracyService.instance.fetchAccuracy(league: league, date: date);
+      accuracy = await AccuracyService.instance.fetchAccuracy(
+        league: league,
+        date: date,
+      );
     } catch (_) {
       accuracyError = true;
     } finally {
@@ -407,12 +442,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> register({required String name, required String email, required String password}) async {
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
     authLoading = true;
     authError = null;
     notifyListeners();
     try {
-      final user = await AuthService.instance.register(name: name, email: email, password: password);
+      final user = await AuthService.instance.register(
+        name: name,
+        email: email,
+        password: password,
+      );
       currentUser = user;
       screen = AppScreen.onboardingPreferences;
       _afterAuth();
@@ -429,7 +472,10 @@ class AppState extends ChangeNotifier {
     authError = null;
     notifyListeners();
     try {
-      final user = await AuthService.instance.login(email: email, password: password);
+      final user = await AuthService.instance.login(
+        email: email,
+        password: password,
+      );
       currentUser = user;
       screen = AppScreen.home;
       _afterAuth();
@@ -539,7 +585,10 @@ class AppState extends ChangeNotifier {
       favoriteLeagueIds.add(leagueId);
     }
     notifyListeners();
-    _favLeaguesStorage.write(key: _favLeagueIdsKey, value: favoriteLeagueIds.join(','));
+    _favLeaguesStorage.write(
+      key: _favLeagueIdsKey,
+      value: favoriteLeagueIds.join(','),
+    );
   }
 
   // Equipos favoritos GLOBALES (no por liga) — un club puede jugar varios
@@ -547,7 +596,8 @@ class AppState extends ChangeNotifier {
   // el favorito aplica a todos. Vive en el server (alimenta el auto-follow
   // de notificaciones ahí), no solo local — se sincroniza al login.
   final Set<int> favoriteTeamIds = {};
-  final Map<int, String> favoriteTeamNames = {}; // solo para mostrar nombre sin re-pedir el roster
+  final Map<int, String> favoriteTeamNames =
+      {}; // solo para mostrar nombre sin re-pedir el roster
   final Set<int> _favoriteTeamInFlight = {};
 
   Future<void> _loadFavoriteTeams() async {
@@ -564,7 +614,11 @@ class AppState extends ChangeNotifier {
 
   bool isFavoriteTeam(int teamId) => favoriteTeamIds.contains(teamId);
 
-  Future<void> setFavoriteTeam(int teamId, bool favorite, {String? teamName}) async {
+  Future<void> setFavoriteTeam(
+    int teamId,
+    bool favorite, {
+    String? teamName,
+  }) async {
     if (_favoriteTeamInFlight.contains(teamId)) return;
     _favoriteTeamInFlight.add(teamId);
     final wasFavorite = favoriteTeamIds.contains(teamId);
@@ -576,7 +630,10 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
     try {
-      final confirmed = await FavoriteTeamsService.instance.setFavorite(teamId, favorite);
+      final confirmed = await FavoriteTeamsService.instance.setFavorite(
+        teamId,
+        favorite,
+      );
       if (confirmed != favorite) {
         if (confirmed) {
           favoriteTeamIds.add(teamId);
@@ -606,13 +663,18 @@ class AppState extends ChangeNotifier {
 
   /// Cuota diaria de picks del plan Free: si ya se acabó, manda a Paywall
   /// en vez de abrir el partido. Premium/Pro no tienen límite.
-  Future<void> openDetail(String id, {int? tabIndex}) async {
+  Future<void> openDetail(
+    String id, {
+    int? tabIndex,
+    AppScreen? returnScreen,
+  }) async {
     if (plan == 'free') {
       try {
         final result = await UsageService.instance.tryViewPick(id);
         if (!result.allowed) {
           pendingPickId = id;
-          quotaMessage = 'Ya viste tus partidos gratis de hoy. Mira un anuncio para ganar 1 más, o hazte Premium para no tener límite.';
+          quotaMessage =
+              'Ya viste tus partidos gratis de hoy. Mira un anuncio para ganar 1 más, o hazte Premium para no tener límite.';
           screen = AppScreen.paywall;
           notifyListeners();
           return;
@@ -624,8 +686,23 @@ class AppState extends ChangeNotifier {
     }
     selectedId = id;
     pendingDetailTabIndex = tabIndex;
+    detailReturnScreen = returnScreen ?? AppScreen.home;
     screen = AppScreen.detail;
     notifyListeners();
+  }
+
+  bool isMatchFinished(Pick pick) {
+    if (pick.liveScore != null && !pick.isLive) return true;
+    if (pick.isLive) return false;
+    final date = pick.matchDate?.split('-');
+    final time = pick.time.split(':');
+    if (date == null || date.length != 3 || time.length != 2) return false;
+    final values = [...date, ...time].map(int.tryParse).toList();
+    if (values.any((value) => value == null)) return false;
+    return DateTime.now().difference(
+          DateTime(values[0]!, values[1]!, values[2]!, values[3]!, values[4]!),
+        ) >
+        const Duration(hours: 3);
   }
 
   bool get canWatchAdForBonusPick => AdsService.instance.isReady;
@@ -646,7 +723,8 @@ class AppState extends ChangeNotifier {
         if (id != null) await openDetail(id);
       },
       onUnavailable: () {
-        quotaMessage = 'No hay anuncio disponible ahora mismo. Intenta de nuevo en un momento.';
+        quotaMessage =
+            'No hay anuncio disponible ahora mismo. Intenta de nuevo en un momento.';
         notifyListeners();
       },
     );
@@ -699,7 +777,8 @@ class AppState extends ChangeNotifier {
 
   final Set<String> _matchChatHistoryLoaded = {};
 
-  List<ChatMessage> matchChatFor(Pick p) => matchChats[_matchKey(p)] ?? const [];
+  List<ChatMessage> matchChatFor(Pick p) =>
+      matchChats[_matchKey(p)] ?? const [];
 
   bool isMatchChatLoading(Pick p) => matchChatLoading.contains(_matchKey(p));
 
@@ -730,22 +809,30 @@ class AppState extends ChangeNotifier {
 
     try {
       final reply = await ChatService.instance.sendMessage(p.id, text.trim());
-      thread.add(ChatMessage(
-        role: ChatRole.ai,
-        text: reply.text,
-        outcomes: reply.outcomes,
-        suggestions: reply.suggestions,
-      ));
+      thread.add(
+        ChatMessage(
+          role: ChatRole.ai,
+          text: reply.text,
+          outcomes: reply.outcomes,
+          suggestions: reply.suggestions,
+        ),
+      );
     } on ChatLimitReachedException {
-      thread.add(const ChatMessage(
-        role: ChatRole.ai,
-        text: 'Llegaste al límite diario de mensajes del plan Free. Con Premium el chat es ilimitado.',
-      ));
+      thread.add(
+        const ChatMessage(
+          role: ChatRole.ai,
+          text:
+              'Llegaste al límite diario de mensajes del plan Free. Con Premium el chat es ilimitado.',
+        ),
+      );
     } catch (_) {
-      thread.add(const ChatMessage(
-        role: ChatRole.ai,
-        text: 'No pude conectar con el análisis ahora mismo. Intenta de nuevo en un momento.',
-      ));
+      thread.add(
+        const ChatMessage(
+          role: ChatRole.ai,
+          text:
+              'No pude conectar con el análisis ahora mismo. Intenta de nuevo en un momento.',
+        ),
+      );
     } finally {
       matchChatLoading.remove(key);
       notifyListeners();
@@ -763,7 +850,9 @@ class AppState extends ChangeNotifier {
   }
 
   List<Pick> get filteredPicks {
-    final picks = allPicks.where((p) => filter == 'all' || p.sport == filter).toList();
+    final picks = allPicks
+        .where((p) => filter == 'all' || p.sport == filter)
+        .toList();
     picks.sort((a, b) {
       if (favoriteTeamIds.isNotEmpty) {
         final aTeam = isFavoriteTeamPick(a) ? 0 : 1;
@@ -791,10 +880,13 @@ class AppState extends ChangeNotifier {
     if (kDevUnlockAll || p.premium || plan != 'free') return false;
     final info = usage;
     if (info == null || info.picksLimit == null) return false;
-    if (p.fixtureId != null && info.viewedFixtureIds.contains(p.fixtureId)) return false;
+    if (p.fixtureId != null && info.viewedFixtureIds.contains(p.fixtureId))
+      return false;
     return info.picksViewedToday >= info.picksLimit!;
   }
 
-  Pick get selectedPick =>
-      allPicks.firstWhere((p) => p.id == selectedId, orElse: () => allPicks.first);
+  Pick get selectedPick => allPicks.firstWhere(
+    (p) => p.id == selectedId,
+    orElse: () => allPicks.first,
+  );
 }

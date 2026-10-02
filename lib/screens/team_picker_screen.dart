@@ -18,7 +18,7 @@ class TeamPickerScreen extends StatelessWidget {
     return Column(
       children: [
         ScreenHeader(
-          onBack: () => context.read<AppState>().go(AppScreen.leaguePreferences),
+          onBack: () => context.read<AppState>().go(AppScreen.leagues),
           title: 'Equipo de ${state.teamPickerLeagueName}',
         ),
         Expanded(

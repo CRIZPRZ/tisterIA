@@ -152,8 +152,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _loading = true;
   bool _hasError = kSimulateNetworkError;
-  bool _pastExpanded = false;
-  final Set<String> _expandedDates = {};
+  String? _expandedLeague;
+  final Set<String> _expandedLeaguePast = {};
   late final PageController _heroController;
   int _heroIndex = 0;
 
@@ -222,10 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    var allPicksForDay = state.homeLeagueFilter == null
+    var allPicksForDay = state.homeLeagueFilter.isEmpty
         ? state.filteredPicks
         : state.filteredPicks
-              .where((p) => p.league == state.homeLeagueFilter)
+              .where((p) => p.leagueId != null && state.homeLeagueFilter.contains(p.leagueId))
               .toList();
     if (state.showLiveOnly) {
       allPicksForDay = allPicksForDay.where((p) => p.isLive).toList();
@@ -236,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (state.homeDateFilter != null) {
       allPicksForDay = allPicksForDay.where((p) => p.matchDate == state.homeDateFilter).toList();
     }
-    final liveCount = state.filteredPicks.where((p) => p.isLive).map((p) => p.fixtureId).toSet().length;
+    final liveCount = allPicksForDay.where((p) => p.isLive).map((p) => p.fixtureId).toSet().length;
     // Un partido real genera varios picks (1X2, doble oportunidad, etc.) —
     // en Home se muestra 1 fila por partido (el mercado 1X2/free), el resto
     // de mercados solo se ven al abrir el detalle → pestaña Mercados.
@@ -279,14 +279,6 @@ class _HomeScreenState extends State<HomeScreen> {
       heroPicks.add(pick);
       if (heroPicks.length == 3) break;
     }
-    final leagueIds = <String, int?>{
-      for (final p in state.allPicks) p.league: p.leagueId,
-    };
-    final leagues = state.favoriteLeagueIds.isEmpty
-        ? leagueIds.keys.toList()
-        : leagueIds.keys
-              .where((l) => state.favoriteLeagueIds.contains(leagueIds[l]))
-              .toList();
     final upcomingPicks = picks.where((p) => !_isPastPick(p)).toList()
       ..sort((a, b) => (_kickoff(a) ?? DateTime(9999)).compareTo(_kickoff(b) ?? DateTime(9999)));
     final pastPicks = picks.where(_isPastPick).toList()
@@ -372,19 +364,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              if (leagues.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _LeagueScroller(
-                  leagues: leagues,
-                  leagueIds: leagueIds,
-                  selected: state.homeLeagueFilter,
-                  onSelect: (league) {
-                    context.read<AppState>().setHomeLeagueFilter(
-                      state.homeLeagueFilter == league ? null : league,
-                    );
-                  },
-                ),
-              ],
               const SizedBox(height: 22),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -426,13 +405,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (upcomingPicks.isEmpty && pastPicks.isEmpty) {
-      return const Padding(
+      final hasLeagueFilter = state.homeLeagueFilter.isNotEmpty;
+      return Padding(
         padding: EdgeInsets.only(top: 50, bottom: 100),
         child: EmptyState(
           icon: Icons.sports_soccer_rounded,
-          title: 'Sin picks en esta categoría',
-          message:
-              'Por ahora no tenemos picks para este deporte. Prueba con otra pestaña o vuelve más tarde.',
+          title: hasLeagueFilter
+              ? 'No hay picks disponibles para esta liga'
+              : 'Sin picks en esta categoría',
+          message: hasLeagueFilter
+              ? 'Por ahora no tenemos picks para esta liga en estas fechas. Vuelve más tarde.'
+              : 'Por ahora no tenemos picks para este deporte. Prueba con otra pestaña o vuelve más tarde.',
         ),
       );
     }
@@ -446,103 +429,166 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
 
-    // Agrupa por fecha manteniendo el orden ya cronológico de upcomingPicks
-    // — "Hoy" siempre abierto (es lo que se quiere ver de entrada), el
-    // resto colapsado igual que "Partidos pasados", para no aventar de
-    // golpe todos los partidos futuros que tengamos.
-    final byDate = <String, List<Pick>>{};
-    for (final p in upcomingPicks) {
-      (byDate[p.matchDate ?? ''] ??= []).add(p);
+    // Agrupa por leagueId para no mezclar torneos que puedan tener el mismo
+    // nombre. El nombre solo se utiliza para presentarlo al usuario.
+    final byLeague = <String, List<Pick>>{};
+    for (final pick in [...upcomingPicks, ...pastPicks]) {
+      final key = pick.leagueId?.toString() ?? 'name:${pick.league}';
+      (byLeague[key] ??= []).add(pick);
     }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       child: Column(
         children: [
-          for (final entry in byDate.entries) ...[
+          SizedBox(
+            height: 94,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: byLeague.length,
+              separatorBuilder: (_, index) => const SizedBox(width: 14),
+              itemBuilder: (context, index) {
+                final entry = byLeague.entries.elementAt(index);
+                final sample = entry.value.first;
+                final active = _expandedLeague == entry.key;
+                return _LeagueLogoFilter(
+                  league: sample.league,
+                  logoUrl: sample.leagueLogoUrl,
+                  active: active,
+                  count: entry.value.length,
+                  onTap: () => setState(() {
+                    _expandedLeague = active ? null : entry.key;
+                  }),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final entry in byLeague.entries) ...[
             Builder(builder: (context) {
-              final label = _dateLabel(entry.key);
-              final isToday = label == 'Hoy';
-              final expanded = isToday || _expandedDates.contains(entry.key);
+              final leagueUpcoming = entry.value.where((pick) => !_isPastPick(pick)).toList()
+                ..sort((a, b) => (_kickoff(a) ?? DateTime(9999)).compareTo(_kickoff(b) ?? DateTime(9999)));
+              final leaguePast = entry.value.where(_isPastPick).toList()
+                ..sort((a, b) => (_kickoff(b) ?? DateTime(0)).compareTo(_kickoff(a) ?? DateTime(0)));
+              final expanded = _expandedLeague == entry.key;
+              final pastExpanded = _expandedLeaguePast.contains(entry.key);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: isToday
-                        ? null
-                        : () => setState(() {
-                              if (_expandedDates.contains(entry.key)) {
-                                _expandedDates.remove(entry.key);
-                              } else {
-                                _expandedDates.add(entry.key);
-                              }
-                            }),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Text(
-                            '$label · ${entry.value.length}',
-                            style: AppText.style(13, weight: FontWeight.w700, color: AppColors.textMuted),
-                          ),
-                          const Spacer(),
-                          if (!isToday)
-                            AnimatedRotation(
-                              turns: expanded ? 0.5 : 0,
-                              duration: const Duration(milliseconds: 180),
-                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   AnimatedSize(
                     duration: const Duration(milliseconds: 260),
                     curve: Curves.easeInOut,
                     alignment: Alignment.topCenter,
-                    child: expanded
-                        ? Column(children: entry.value.map(cardFor).toList())
-                        : const SizedBox(width: double.infinity),
+                    child: !expanded
+                        ? const SizedBox(width: double.infinity)
+                        : Column(
+                            children: [
+                              if (leagueUpcoming.isNotEmpty) ...[
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Text('Próximos · ${leagueUpcoming.length}', style: AppText.style(12.5, weight: FontWeight.w700, color: AppColors.textMuted)),
+                                  ),
+                                ),
+                                ...leagueUpcoming.map(cardFor),
+                              ],
+                              if (leaguePast.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () => setState(() {
+                                    if (pastExpanded) {
+                                      _expandedLeaguePast.remove(entry.key);
+                                    } else {
+                                      _expandedLeaguePast.add(entry.key);
+                                    }
+                                  }),
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      children: [
+                                        Text('Partidos pasados · ${leaguePast.length}', style: AppText.style(12.5, weight: FontWeight.w700, color: AppColors.textMuted)),
+                                        const Spacer(),
+                                        AnimatedRotation(
+                                          turns: pastExpanded ? 0.5 : 0,
+                                          duration: const Duration(milliseconds: 180),
+                                          child: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              if (pastExpanded) ...leaguePast.map(cardFor),
+                            ],
+                          ),
                   ),
                 ],
               );
             }),
           ],
-          if (pastPicks.isNotEmpty) ...[
-            GestureDetector(
-              onTap: () => setState(() => _pastExpanded = !_pastExpanded),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      'Partidos pasados · ${pastPicks.length}',
-                      style: AppText.style(13, weight: FontWeight.w700, color: AppColors.textMuted),
-                    ),
-                    const Spacer(),
-                    AnimatedRotation(
-                      turns: _pastExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 180),
-                      child: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted),
-                    ),
-                  ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LeagueLogoFilter extends StatelessWidget {
+  const _LeagueLogoFilter({
+    required this.league,
+    required this.logoUrl,
+    required this.active,
+    required this.count,
+    required this.onTap,
+  });
+
+  final String league;
+  final String? logoUrl;
+  final bool active;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: active,
+      label: '$league, $count partidos',
+      child: GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: 74,
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: active ? AppColors.green : AppColors.textMuted.withValues(alpha: 0.35),
+                    width: active ? 3 : 1.5,
+                  ),
+                  boxShadow: active
+                      ? [BoxShadow(color: AppColors.green.withValues(alpha: 0.35), blurRadius: 10)]
+                      : null,
+                ),
+                child: TeamCrest(name: league, size: 52, logoUrl: logoUrl),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                league,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppText.style(
+                  10.5,
+                  weight: active ? FontWeight.w800 : FontWeight.w600,
+                  color: active ? AppColors.green : AppColors.textMuted,
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: _pastExpanded
-                  ? Column(children: pastPicks.map(cardFor).toList())
-                  : const SizedBox(width: double.infinity),
-            ),
-          ],
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -830,7 +876,7 @@ class _HeroCard extends StatelessWidget {
                         children: [
                           const Icon(Icons.sports_soccer_rounded, size: 28, color: AppColors.textFaint),
                           const SizedBox(height: 10),
-                          Text('Sin partidos destacados', style: AppText.style(13.5, weight: FontWeight.w600, color: AppColors.textMuted)),
+                          Text('No hay partidos próximos destacados', style: AppText.style(13.5, weight: FontWeight.w600, color: AppColors.textMuted)),
                         ],
                       ),
                     ),
@@ -880,13 +926,13 @@ class _HeroCard extends StatelessWidget {
                                         ),
                                       ),
                                       alignment: Alignment.center,
-                                      child: Text(
-                                        featured!.liveScore != null ? featured!.liveScore!.replaceAll('-', ' - ') : 'VS',
-                                        style: AppText.style(
-                                          featured!.liveScore != null ? (compact ? 13 : 14.5) : (compact ? 12 : 13.5),
-                                          weight: FontWeight.w900,
-                                          color: featured!.liveScore != null ? Colors.white : const Color(0xFF95A09A),
-                                        ),
+                                      child: _MatchScoreText(
+                                        score: featured!.liveScore,
+                                        scoreSize: compact ? 13 : 14.5,
+                                        fallback: 'VS',
+                                        fallbackSize: compact ? 12 : 13.5,
+                                        scoreColor: Colors.white,
+                                        fallbackColor: const Color(0xFF95A09A),
                                       ),
                                     ),
                                     _CrestBubble(
@@ -1013,109 +1059,6 @@ class _HeroDots extends StatelessWidget {
         );
       }),
     );
-  }
-}
-
-class _LeagueScroller extends StatelessWidget {
-  final List<String> leagues;
-  final Map<String, int?> leagueIds;
-  final String? selected;
-  final ValueChanged<String> onSelect;
-
-  const _LeagueScroller({
-    required this.leagues,
-    required this.leagueIds,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: leagues.length,
-        separatorBuilder: (_, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final league = leagues[index];
-          final active = selected == league;
-          return GestureDetector(
-            onTap: () => onSelect(league),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 94,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF262A34),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: active
-                      ? AppColors.green.withValues(alpha: 0.84)
-                      : const Color(0xFF4A505A),
-                  width: active ? 1.5 : 1,
-                ),
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                          color: AppColors.green.withValues(alpha: 0.18),
-                          blurRadius: 10,
-                          spreadRadius: -4,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 34,
-                    height: 34,
-                    child: TeamCrest(
-                      name: league,
-                      size: 34,
-                      logoUrl: leagueIds[league] == null
-                          ? null
-                          : 'https://media.api-sports.io/football/leagues/${leagueIds[league]}.png',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _leaguePrimary(league),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppText.style(10, weight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _leagueSecondary(league),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppText.style(9.5, color: const Color(0xFFBFC3CA)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _leaguePrimary(String league) {
-    if (league == 'Premier League') return 'Premier';
-    if (league == 'La Liga') return 'LaLiga';
-    return league.split(' ').first;
-  }
-
-  String _leagueSecondary(String league) {
-    if (league == 'Premier League') return 'League';
-    if (league == 'La Liga') return 'La Liga';
-    final words = league.split(' ');
-    return words.length > 1 ? words.skip(1).join(' ') : league;
   }
 }
 
@@ -1255,15 +1198,15 @@ class _TopPickCard extends StatelessWidget {
                             teamId: pick.teamAId,
                             leagueId: pick.leagueId,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              pick.liveScore != null ? pick.liveScore!.replaceAll('-', ' - ') : 'VS.',
-                              style: AppText.style(
-                                pick.liveScore != null ? 17 : 14,
-                                weight: FontWeight.w900,
-                                color: pick.liveScore != null ? Colors.white : const Color(0xFFE7EAEE),
-                              ),
+                          SizedBox(
+                            width: 52,
+                            child: _MatchScoreText(
+                              score: pick.liveScore,
+                              scoreSize: 17,
+                              fallback: 'VS.',
+                              fallbackSize: 14,
+                              scoreColor: Colors.white,
+                              fallbackColor: const Color(0xFFE7EAEE),
                             ),
                           ),
                           _CrestBubble(
@@ -1426,6 +1369,47 @@ class _CrestBubble extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.read<AppState>().openTeamHistory(teamId!, name, leagueId),
       child: bubble,
+    );
+  }
+}
+
+
+/// Mantiene el marcador en una sola línea y se reduce solo si el espacio
+/// disponible no alcanza. Se usa en las tarjetas de Home para que resultados
+/// de dos dígitos no desplacen escudos ni indicadores de confianza.
+class _MatchScoreText extends StatelessWidget {
+  final String? score;
+  final double scoreSize;
+  final String fallback;
+  final double fallbackSize;
+  final Color scoreColor;
+  final Color fallbackColor;
+
+  const _MatchScoreText({
+    required this.score,
+    required this.scoreSize,
+    required this.fallback,
+    required this.fallbackSize,
+    required this.scoreColor,
+    required this.fallbackColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasScore = score != null;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        hasScore ? score!.replaceAll('-', ' - ') : fallback,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.visible,
+        style: AppText.style(
+          hasScore ? scoreSize : fallbackSize,
+          weight: FontWeight.w900,
+          color: hasScore ? scoreColor : fallbackColor,
+        ),
+      ),
     );
   }
 }

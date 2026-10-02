@@ -45,7 +45,9 @@ class _DetailScreenState extends State<DetailScreen> {
   void initState() {
     super.initState();
     if (!_isFinished(context.read<AppState>().selectedPick)) {
-      context.read<AppState>().loadPicks(); // refresco inmediato al abrir, no esperar 20s
+      context
+          .read<AppState>()
+          .loadPicks(); // refresco inmediato al abrir, no esperar 20s
     }
     _liveTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (!_isFinished(context.read<AppState>().selectedPick)) {
@@ -85,7 +87,9 @@ class _DetailScreenState extends State<DetailScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.read<AppState>().go(AppScreen.home),
+                    onTap: () => context.read<AppState>().go(
+                      context.read<AppState>().detailReturnScreen,
+                    ),
                     behavior: HitTestBehavior.opaque,
                     child: const Padding(
                       padding: EdgeInsets.all(8),
@@ -112,9 +116,13 @@ class _DetailScreenState extends State<DetailScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          state.isFollowing(pick) ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+                          state.isFollowing(pick)
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_none_rounded,
                           size: 20,
-                          color: state.isFollowing(pick) ? AppColors.green : Colors.white,
+                          color: state.isFollowing(pick)
+                              ? AppColors.green
+                              : Colors.white,
                         ),
                       ),
                     ),
@@ -124,7 +132,10 @@ class _DetailScreenState extends State<DetailScreen> {
             Expanded(
               child: locked
                   ? const _LockedBody()
-                  : _UnlockedTabs(pick: pick, initialTabIndex: state.pendingDetailTabIndex),
+                  : _UnlockedTabs(
+                      pick: pick,
+                      initialTabIndex: state.pendingDetailTabIndex,
+                    ),
             ),
           ],
         ),
@@ -132,7 +143,6 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 }
-
 
 // Desglose real de local/empate/visitante del mercado 1X2 — de la fuente
 // que de verdad se usó (ml/dixon_coles/api), no siempre lo mismo, así que
@@ -149,32 +159,43 @@ class _ProbBreakdownBar extends StatelessWidget {
     if (home + draw + away <= 0) return const SizedBox.shrink();
 
     Widget seg(int value, Color color) => Expanded(
-          flex: value.clamp(1, 1000),
-          child: Container(height: 6, color: color),
-        );
+      flex: value.clamp(1, 1000),
+      child: Container(height: 6, color: color),
+    );
 
     Widget stat(String label, int value, Color color) => Expanded(
-          child: Column(
-            children: [
-              Text('$value%', style: AppText.style(13, weight: FontWeight.w800, color: color)),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.style(9.5, color: AppColors.textMuted),
-              ),
-            ],
+      child: Column(
+        children: [
+          Text(
+            '$value%',
+            style: AppText.style(13, weight: FontWeight.w800, color: color),
           ),
-        );
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.style(9.5, color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         children: [
           if (pick.scoreProbabilities.isNotEmpty) ...[
-            Text('MARCADORES PROBABLES', style: AppText.style(9.5, weight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.4)),
+            Text(
+              'MARCADORES PROBABLES',
+              style: AppText.style(
+                9.5,
+                weight: FontWeight.w700,
+                color: AppColors.textMuted,
+                letterSpacing: 0.4,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -185,18 +206,38 @@ class _ProbBreakdownBar extends StatelessWidget {
                     children: [
                       Text(
                         '${pick.scoreProbabilities[i].home} - ${pick.scoreProbabilities[i].away}',
-                        style: AppText.style(i == 0 ? 18 : 14, weight: i == 0 ? FontWeight.w800 : FontWeight.w700, color: i == 0 ? Colors.white : AppColors.textMuted),
+                        style: AppText.style(
+                          i == 0 ? 18 : 14,
+                          weight: i == 0 ? FontWeight.w800 : FontWeight.w700,
+                          color: i == 0 ? Colors.white : AppColors.textMuted,
+                        ),
                       ),
                       const SizedBox(height: 2),
-                      Text('${pick.scoreProbabilities[i].pct}%', style: AppText.style(10.5, weight: FontWeight.w600, color: AppColors.textFaint)),
+                      Text(
+                        '${pick.scoreProbabilities[i].pct}%',
+                        style: AppText.style(
+                          10.5,
+                          weight: FontWeight.w600,
+                          color: AppColors.textFaint,
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ],
             ),
             const SizedBox(height: 14),
-          ] else if (pick.predictedScoreHome != null && pick.predictedScoreAway != null) ...[
-            Text('MARCADOR PROBABLE', style: AppText.style(9.5, weight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.4)),
+          ] else if (pick.predictedScoreHome != null &&
+              pick.predictedScoreAway != null) ...[
+            Text(
+              'MARCADOR PROBABLE',
+              style: AppText.style(
+                9.5,
+                weight: FontWeight.w700,
+                color: AppColors.textMuted,
+                letterSpacing: 0.4,
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               '${pick.predictedScoreHome} - ${pick.predictedScoreAway}',
@@ -206,7 +247,13 @@ class _ProbBreakdownBar extends StatelessWidget {
           ],
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: Row(children: [seg(home, AppColors.green), seg(draw, AppColors.textFaint), seg(away, AppColors.blue)]),
+            child: Row(
+              children: [
+                seg(home, AppColors.green),
+                seg(draw, AppColors.textFaint),
+                seg(away, AppColors.blue),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -236,13 +283,27 @@ class _CardCount extends StatelessWidget {
         if (yellow > 0) ...[
           Container(width: 12, height: 16, color: const Color(0xFFF2C94C)),
           const SizedBox(width: 4),
-          Text('$yellow', style: AppText.style(12, weight: FontWeight.w700, color: const Color(0xFFF2C94C))),
+          Text(
+            '$yellow',
+            style: AppText.style(
+              12,
+              weight: FontWeight.w700,
+              color: const Color(0xFFF2C94C),
+            ),
+          ),
         ],
         if (yellow > 0 && red > 0) const SizedBox(width: 10),
         if (red > 0) ...[
           Container(width: 12, height: 16, color: AppColors.red),
           const SizedBox(width: 4),
-          Text('$red', style: AppText.style(12, weight: FontWeight.w700, color: AppColors.red)),
+          Text(
+            '$red',
+            style: AppText.style(
+              12,
+              weight: FontWeight.w700,
+              color: AppColors.red,
+            ),
+          ),
         ],
       ],
     );
@@ -270,7 +331,10 @@ class _GoalScorersRowState extends State<_GoalScorersRow> {
     super.initState();
     _load();
     if (widget.pick.isLive) {
-      _liveRefresh = Timer.periodic(const Duration(seconds: 30), (_) => _load());
+      _liveRefresh = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _load(),
+      );
     }
   }
 
@@ -283,7 +347,8 @@ class _GoalScorersRowState extends State<_GoalScorersRow> {
   Future<void> _load() async {
     try {
       final events = await EventsService.instance.fetchEvents(widget.pick.id);
-      final goals = events.where((e) => e.isGoal).toList()..sort((a, b) => a.minute.compareTo(b.minute));
+      final goals = events.where((e) => e.isGoal).toList()
+        ..sort((a, b) => a.minute.compareTo(b.minute));
       if (mounted) setState(() => _goals = goals);
     } catch (_) {
       // silencioso — es un adorno, no un dato crítico que amerite reintentar
@@ -298,15 +363,15 @@ class _GoalScorersRowState extends State<_GoalScorersRow> {
     final awayGoals = _goals.where((e) => e.teamId == pick.teamBId).toList();
 
     Widget scorerLine(MatchEvent e, TextAlign align) => Padding(
-          padding: const EdgeInsets.only(bottom: 2),
-          child: Text(
-            '${e.player} ${e.minuteLabel}',
-            textAlign: align,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.style(11.5, color: AppColors.textMuted),
-          ),
-        );
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Text(
+        '${e.player} ${e.minuteLabel}',
+        textAlign: align,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.style(11.5, color: AppColors.textMuted),
+      ),
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,17 +379,25 @@ class _GoalScorersRowState extends State<_GoalScorersRow> {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: [for (final e in homeGoals) scorerLine(e, TextAlign.right)],
+            children: [
+              for (final e in homeGoals) scorerLine(e, TextAlign.right),
+            ],
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Icon(Icons.sports_soccer_rounded, size: 14, color: AppColors.textFaint),
+          child: Icon(
+            Icons.sports_soccer_rounded,
+            size: 14,
+            color: AppColors.textFaint,
+          ),
         ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [for (final e in awayGoals) scorerLine(e, TextAlign.left)],
+            children: [
+              for (final e in awayGoals) scorerLine(e, TextAlign.left),
+            ],
           ),
         ),
       ],
@@ -350,16 +423,19 @@ class _MatchStreamSectionState extends State<_MatchStreamSection> {
   @override
   void initState() {
     super.initState();
-    StreamService.instance.fetchStream(widget.pick.id).then((stream) {
-      if (mounted) {
-        setState(() {
-          _stream = stream;
-          _checked = true;
+    StreamService.instance
+        .fetchStream(widget.pick.id)
+        .then((stream) {
+          if (mounted) {
+            setState(() {
+              _stream = stream;
+              _checked = true;
+            });
+          }
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _checked = true);
         });
-      }
-    }).catchError((_) {
-      if (mounted) setState(() => _checked = true);
-    });
   }
 
   @override
@@ -378,13 +454,17 @@ class _MatchStreamSectionState extends State<_MatchStreamSection> {
               decoration: BoxDecoration(
                 color: _expanded ? AppColors.card : AppColors.green,
                 borderRadius: BorderRadius.circular(14),
-                border: _expanded ? Border.all(color: AppColors.cardBorder) : null,
+                border: _expanded
+                    ? Border.all(color: AppColors.cardBorder)
+                    : null,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    _expanded ? Icons.keyboard_arrow_up_rounded : Icons.play_circle_fill_rounded,
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.play_circle_fill_rounded,
                     size: 19,
                     color: _expanded ? Colors.white : const Color(0xFF0A0A0B),
                   ),
@@ -553,7 +633,10 @@ class _UnlockedTabs extends StatelessWidget {
                   indicatorPadding: const EdgeInsets.symmetric(vertical: 2),
                   labelColor: Colors.black,
                   unselectedLabelColor: const Color(0xFFA7AFB6),
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  labelPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   labelStyle: AppText.style(12.5, weight: FontWeight.w800),
                   unselectedLabelStyle: AppText.style(
                     12.5,
@@ -591,7 +674,20 @@ class _UnlockedTabs extends StatelessWidget {
   }
 }
 
-const _monthAbbr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const _monthAbbr = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
 
 String _shortDate(String? matchDate) {
   if (matchDate == null) return '';
@@ -622,19 +718,32 @@ class _AnalysisTab extends StatelessWidget {
             children: [
               if (pick.isLive)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0x26FF5C5C),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.red.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: AppColors.red.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Padding(padding: EdgeInsets.only(right: 8), child: PulseDot()),
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: PulseDot(),
+                      ),
                       LiveMinuteText(
                         pick: pick,
-                        style: AppText.style(12.5, weight: FontWeight.w800, color: AppColors.red, letterSpacing: 0.3),
+                        style: AppText.style(
+                          12.5,
+                          weight: FontWeight.w800,
+                          color: AppColors.red,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                     ],
                   ),
@@ -654,7 +763,9 @@ class _AnalysisTab extends StatelessWidget {
               if (pick.venue != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  pick.venueCity != null ? '${pick.venue} · ${pick.venueCity}' : pick.venue!,
+                  pick.venueCity != null
+                      ? '${pick.venue} · ${pick.venueCity}'
+                      : pick.venue!,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -678,19 +789,47 @@ class _AnalysisTab extends StatelessWidget {
                             style: AppText.style(17, weight: FontWeight.w800),
                           ),
                         ),
-                        Text('Local', style: AppText.style(10.5, color: AppColors.textMuted)),
+                        Text(
+                          'Local',
+                          style: AppText.style(
+                            10.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  TeamCrest(name: pick.teamA, size: 30, logoUrl: pick.teamALogoUrl),
+                  TeamCrest(
+                    name: pick.teamA,
+                    size: 30,
+                    logoUrl: pick.teamALogoUrl,
+                  ),
                   const SizedBox(width: 14),
                   if (pick.liveScore != null)
-                    Text(pick.liveScore!.replaceAll('-', ' - '), style: AppText.style(26, weight: FontWeight.w800, color: Colors.white))
+                    Text(
+                      pick.liveScore!.replaceAll('-', ' - '),
+                      style: AppText.style(
+                        26,
+                        weight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    )
                   else
-                    Text('vs', style: AppText.style(14, weight: FontWeight.w700, color: AppColors.textFaint)),
+                    Text(
+                      'vs',
+                      style: AppText.style(
+                        14,
+                        weight: FontWeight.w700,
+                        color: AppColors.textFaint,
+                      ),
+                    ),
                   const SizedBox(width: 14),
-                  TeamCrest(name: pick.teamB, size: 30, logoUrl: pick.teamBLogoUrl),
+                  TeamCrest(
+                    name: pick.teamB,
+                    size: 30,
+                    logoUrl: pick.teamBLogoUrl,
+                  ),
                   const SizedBox(width: 10),
                   Flexible(
                     child: Column(
@@ -704,13 +843,24 @@ class _AnalysisTab extends StatelessWidget {
                             style: AppText.style(17, weight: FontWeight.w800),
                           ),
                         ),
-                        Text('Visitante', style: AppText.style(10.5, color: AppColors.textMuted)),
+                        Text(
+                          'Visitante',
+                          style: AppText.style(
+                            10.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              if (pick.isLive && (pick.liveYellowA + pick.liveRedA + pick.liveYellowB + pick.liveRedB) > 0) ...[
+              if (pick.isLive &&
+                  (pick.liveYellowA +
+                          pick.liveRedA +
+                          pick.liveYellowB +
+                          pick.liveRedB) >
+                      0) ...[
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -734,7 +884,11 @@ class _AnalysisTab extends StatelessWidget {
             children: [
               if (pick.hasNoPrediction) ...[
                 Center(
-                  child: Icon(Icons.help_outline_rounded, size: 72, color: AppColors.textFaint),
+                  child: Icon(
+                    Icons.help_outline_rounded,
+                    size: 72,
+                    color: AppColors.textFaint,
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Center(
@@ -743,132 +897,148 @@ class _AnalysisTab extends StatelessWidget {
                     child: Text(
                       'Sin datos suficientes todavía para predecir este cruce con confianza — no inventamos un número.',
                       textAlign: TextAlign.center,
-                      style: AppText.style(13.5, weight: FontWeight.w500, color: AppColors.textMuted),
+                      style: AppText.style(
+                        13.5,
+                        weight: FontWeight.w500,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ),
               ] else ...[
-              Center(
-          child: ProbRing(
-            pct: pick.prob,
-            size: 156,
-            strokeWidth: 11,
-            fontSize: 32,
-            label: null,
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: RichText(
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: AppText.style(
-                  13.5,
-                  weight: FontWeight.w500,
-                  color: AppColors.textMuted,
+                Center(
+                  child: ProbRing(
+                    pct: pick.prob,
+                    size: 156,
+                    strokeWidth: 11,
+                    fontSize: 32,
+                    label: null,
+                  ),
                 ),
-                children: [
-                  const TextSpan(text: 'Probabilidad de victoria: '),
-                  TextSpan(
-                    text: _probabilityLabel(pick),
-                    style: AppText.style(13.5, weight: FontWeight.w700, color: Colors.white),
+                const SizedBox(height: 18),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      text: TextSpan(
+                        style: AppText.style(
+                          13.5,
+                          weight: FontWeight.w500,
+                          color: AppColors.textMuted,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Probabilidad de victoria: '),
+                          TextSpan(
+                            text: _probabilityLabel(pick),
+                            style: AppText.style(
+                              13.5,
+                              weight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        ],
-        const SizedBox(height: 26),
-        _InsightPanel(
-          title: 'FORMA RECIENTE',
-          trailing: null,
-          child: Column(
-            children: [
-              _RecentFormRow(name: pick.teamA, form: pick.formA),
-              const SizedBox(height: 18),
-              _RecentFormRow(name: pick.teamB, form: pick.formB),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        _InsightPanel(
-          title: 'ANÁLISIS IA',
-          trailing: _GhostAiButton(
-            icon: Icons.refresh_rounded,
-            label: 'Actualizar IA',
-            onTap: () {},
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ..._insightParagraphs(pick).expand(
-                (p) => [
-                  Text(
-                    p,
-                    style: AppText.style(15, color: const Color(0xFFE1E7E3), weight: FontWeight.w500, height: 1.55),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Container(
-                height: 1,
-                color: AppColors.green.withValues(alpha: 0.14),
+                ),
+              ],
+              const SizedBox(height: 26),
+              _InsightPanel(
+                title: 'FORMA RECIENTE',
+                trailing: null,
+                child: Column(
+                  children: [
+                    _RecentFormRow(name: pick.teamA, form: pick.formA),
+                    const SizedBox(height: 18),
+                    _RecentFormRow(name: pick.teamB, form: pick.formB),
+                  ],
+                ),
               ),
               const SizedBox(height: 18),
-              GestureDetector(
-                onTap: () => DefaultTabController.of(context).animateTo(1),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 15,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13C57A),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF13C57A).withValues(alpha: 0.22),
-                        blurRadius: 18,
-                        spreadRadius: -6,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        color: Colors.black,
-                        size: 19,
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          'Preguntar a la IA sobre este partido',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              _InsightPanel(
+                title: 'ANÁLISIS IA',
+                trailing: _GhostAiButton(
+                  icon: Icons.refresh_rounded,
+                  label: 'Actualizar IA',
+                  onTap: () {},
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ..._insightParagraphs(pick).expand(
+                      (p) => [
+                        Text(
+                          p,
                           style: AppText.style(
-                            14.5,
-                            weight: FontWeight.w800,
-                            color: Colors.black,
+                            15,
+                            color: const Color(0xFFE1E7E3),
+                            weight: FontWeight.w500,
+                            height: 1.55,
                           ),
                         ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 1,
+                      color: AppColors.green.withValues(alpha: 0.14),
+                    ),
+                    const SizedBox(height: 18),
+                    GestureDetector(
+                      onTap: () =>
+                          DefaultTabController.of(context).animateTo(1),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF13C57A),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF13C57A,
+                              ).withValues(alpha: 0.22),
+                              blurRadius: 18,
+                              spreadRadius: -6,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              color: Colors.black,
+                              size: 19,
+                            ),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                'Preguntar a la IA sobre este partido',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.style(
+                                  14.5,
+                                  weight: FontWeight.w800,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
             ],
           ),
         ),
@@ -889,9 +1059,14 @@ class _AnalysisTab extends StatelessWidget {
   }
 
   List<String> _insightParagraphs(Pick pick) {
-    final paragraphs = [pick.analysisP1.trim(), pick.analysisP2.trim()].where((t) => t.isNotEmpty).toList();
+    final paragraphs = [
+      pick.analysisP1.trim(),
+      pick.analysisP2.trim(),
+    ].where((t) => t.isNotEmpty).toList();
     if (paragraphs.isNotEmpty) return paragraphs;
-    return ['El modelo asigna ${pick.prob}% de confianza a ${pick.pick}, apoyado por la forma reciente, el comportamiento ofensivo y el contexto competitivo de este partido.'];
+    return [
+      'El modelo asigna ${pick.prob}% de confianza a ${pick.pick}, apoyado por la forma reciente, el comportamiento ofensivo y el contexto competitivo de este partido.',
+    ];
   }
 }
 
@@ -1003,10 +1178,16 @@ class _RecentFormRow extends StatelessWidget {
             '$name:',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppText.style(13, weight: FontWeight.w700, color: Colors.white),
+            style: AppText.style(
+              13,
+              weight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
         ),
-        ...form.take(5).map(
+        ...form
+            .take(5)
+            .map(
               (result) => Padding(
                 padding: const EdgeInsets.only(left: 6),
                 child: _FormBadge(result: result),
@@ -1053,7 +1234,10 @@ class _PitchLinesPainter extends CustomPainter {
     final stripeH = size.height / stripes;
     for (var i = 0; i < stripes; i++) {
       final paint = Paint()..color = i.isEven ? _light : _dark;
-      canvas.drawRect(Rect.fromLTWH(0, stripeH * i, size.width, stripeH), paint);
+      canvas.drawRect(
+        Rect.fromLTWH(0, stripeH * i, size.width, stripeH),
+        paint,
+      );
     }
 
     final line = Paint()
@@ -1067,21 +1251,48 @@ class _PitchLinesPainter extends CustomPainter {
     final field = Rect.fromLTWH(margin, margin, w - margin * 2, h - margin * 2);
 
     canvas.drawRect(field, line);
-    canvas.drawLine(Offset(field.left, h / 2), Offset(field.right, h / 2), line);
+    canvas.drawLine(
+      Offset(field.left, h / 2),
+      Offset(field.right, h / 2),
+      line,
+    );
     canvas.drawCircle(Offset(w / 2, h / 2), w * 0.16, line);
-    canvas.drawCircle(Offset(w / 2, h / 2), 2, line..style = PaintingStyle.fill);
+    canvas.drawCircle(
+      Offset(w / 2, h / 2),
+      2,
+      line..style = PaintingStyle.fill,
+    );
     line.style = PaintingStyle.stroke;
 
     final boxW = field.width * 0.62;
     final sixYardW = field.width * 0.32;
 
     // Área grande + chica, arriba.
-    canvas.drawRect(Rect.fromLTWH(field.left + (field.width - boxW) / 2, field.top, boxW, h * 0.15), line);
-    canvas.drawRect(Rect.fromLTWH(field.left + (field.width - sixYardW) / 2, field.top, sixYardW, h * 0.06), line);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        field.left + (field.width - boxW) / 2,
+        field.top,
+        boxW,
+        h * 0.15,
+      ),
+      line,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        field.left + (field.width - sixYardW) / 2,
+        field.top,
+        sixYardW,
+        h * 0.06,
+      ),
+      line,
+    );
     // Medio círculo exacto (0 a π): el centro está sobre la línea del área,
     // así los dos extremos del arco quedan pegados a esa línea sin flotar.
     canvas.drawArc(
-      Rect.fromCircle(center: Offset(w / 2, field.top + h * 0.15), radius: w * 0.14),
+      Rect.fromCircle(
+        center: Offset(w / 2, field.top + h * 0.15),
+        radius: w * 0.14,
+      ),
       0,
       3.14159,
       false,
@@ -1089,10 +1300,29 @@ class _PitchLinesPainter extends CustomPainter {
     );
 
     // Área grande + chica, abajo.
-    canvas.drawRect(Rect.fromLTWH(field.left + (field.width - boxW) / 2, field.bottom - h * 0.15, boxW, h * 0.15), line);
-    canvas.drawRect(Rect.fromLTWH(field.left + (field.width - sixYardW) / 2, field.bottom - h * 0.06, sixYardW, h * 0.06), line);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        field.left + (field.width - boxW) / 2,
+        field.bottom - h * 0.15,
+        boxW,
+        h * 0.15,
+      ),
+      line,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        field.left + (field.width - sixYardW) / 2,
+        field.bottom - h * 0.06,
+        sixYardW,
+        h * 0.06,
+      ),
+      line,
+    );
     canvas.drawArc(
-      Rect.fromCircle(center: Offset(w / 2, field.bottom - h * 0.15), radius: w * 0.14),
+      Rect.fromCircle(
+        center: Offset(w / 2, field.bottom - h * 0.15),
+        radius: w * 0.14,
+      ),
       3.14159,
       3.14159,
       false,
@@ -1109,7 +1339,13 @@ class _PitchLinesPainter extends CustomPainter {
       (field.bottomLeft, 3 * halfPi),
     ];
     for (final (center, startAngle) in corners) {
-      canvas.drawArc(Rect.fromCircle(center: center, radius: cornerR), startAngle, halfPi, false, line);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: cornerR),
+        startAngle,
+        halfPi,
+        false,
+        line,
+      );
     }
   }
 
@@ -1138,9 +1374,7 @@ class _PitchLineup extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF1E4526),
-              ),
+              decoration: const BoxDecoration(color: Color(0xFF1E4526)),
               child: Stack(
                 children: [
                   Positioned.fill(
@@ -1175,7 +1409,8 @@ class _PlayerDot extends StatelessWidget {
   final RealLineupPlayer player;
   const _PlayerDot({required this.player});
 
-  bool get _isPlaceholder => player.id == 0 && player.number == 0 && player.name.isEmpty;
+  bool get _isPlaceholder =>
+      player.id == 0 && player.number == 0 && player.name.isEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -1197,11 +1432,19 @@ class _PlayerDot extends StatelessWidget {
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
-                      BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
+                      BoxShadow(
+                        color: Colors.black45,
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
                     ],
                   ),
                   child: placeholder
-                      ? const Icon(Icons.person_rounded, size: 22, color: Colors.black38)
+                      ? const Icon(
+                          Icons.person_rounded,
+                          size: 22,
+                          color: Colors.black38,
+                        )
                       : CachedNetworkImage(
                           imageUrl: player.photoUrl,
                           fit: BoxFit.cover,
@@ -1228,7 +1471,11 @@ class _PlayerDot extends StatelessWidget {
                     ),
                     child: Text(
                       '${player.number}',
-                      style: AppText.style(9.5, weight: FontWeight.w800, color: Colors.white),
+                      style: AppText.style(
+                        9.5,
+                        weight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -1301,10 +1548,16 @@ class _LineupTabState extends State<_LineupTab> {
 
     final hasLineups = _lineups!.length >= 2;
     final lineupA = hasLineups
-        ? _lineups!.firstWhere((l) => l.team == widget.pick.teamA, orElse: () => _lineups![0])
+        ? _lineups!.firstWhere(
+            (l) => l.team == widget.pick.teamA,
+            orElse: () => _lineups![0],
+          )
         : _placeholderLineup(widget.pick.teamA);
     final lineupB = hasLineups
-        ? _lineups!.firstWhere((l) => l.team == widget.pick.teamB, orElse: () => _lineups![1])
+        ? _lineups!.firstWhere(
+            (l) => l.team == widget.pick.teamB,
+            orElse: () => _lineups![1],
+          )
         : _placeholderLineup(widget.pick.teamB);
     final active = showTeamA ? lineupA : lineupB;
 
@@ -1360,12 +1613,11 @@ class _LineupTabState extends State<_LineupTab> {
                             imageUrl: active.coachPhotoUrl!,
                             fit: BoxFit.cover,
                             fadeInDuration: Duration.zero,
-                            errorWidget: (context, url, error) =>
-                                const Icon(
-                                  Icons.sports_rounded,
-                                  size: 20,
-                                  color: Colors.white70,
-                                ),
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.sports_rounded,
+                              size: 20,
+                              color: Colors.white70,
+                            ),
                           ),
                   ),
                 ),
@@ -1391,7 +1643,12 @@ class _LineupTabState extends State<_LineupTab> {
           const SizedBox(height: 18),
           Text(
             'SUPLENTES',
-            style: AppText.style(12, weight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 0.4),
+            style: AppText.style(
+              12,
+              weight: FontWeight.w600,
+              color: AppColors.textMuted,
+              letterSpacing: 0.4,
+            ),
           ),
           const SizedBox(height: 10),
           AppCard(
@@ -1404,49 +1661,61 @@ class _LineupTabState extends State<_LineupTab> {
                     padding: const EdgeInsets.only(top: 10, bottom: 2),
                     child: Text(
                       group.$1,
-                      style: AppText.style(10.5, weight: FontWeight.w700, color: AppColors.blue, letterSpacing: 0.3),
+                      style: AppText.style(
+                        10.5,
+                        weight: FontWeight.w700,
+                        color: AppColors.blue,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
-                  ...group.$2.map((p) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            ClipOval(
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                color: AppColors.cardBorder,
-                                child: CachedNetworkImage(
-                                  imageUrl: p.photoUrl,
-                                  fit: BoxFit.cover,
-                                  fadeInDuration: Duration.zero,
-                                  errorWidget: (context, url, error) => const Icon(
-                                    Icons.person_rounded,
-                                    size: 18,
-                                    color: Colors.white54,
-                                  ),
-                                ),
+                  ...group.$2.map(
+                    (p) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          ClipOval(
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              color: AppColors.cardBorder,
+                              child: CachedNetworkImage(
+                                imageUrl: p.photoUrl,
+                                fit: BoxFit.cover,
+                                fadeInDuration: Duration.zero,
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                      Icons.person_rounded,
+                                      size: 18,
+                                      color: Colors.white54,
+                                    ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            SizedBox(
-                              width: 24,
-                              child: Text(
-                                '${p.number}',
-                                style: AppText.style(12, weight: FontWeight.w700, color: AppColors.textMuted),
+                          ),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 24,
+                            child: Text(
+                              '${p.number}',
+                              style: AppText.style(
+                                12,
+                                weight: FontWeight.w700,
+                                color: AppColors.textMuted,
                               ),
                             ),
-                            Expanded(
-                              child: Text(
-                                p.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppText.style(13, weight: FontWeight.w600),
-                              ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              p.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.style(13, weight: FontWeight.w600),
                             ),
-                          ],
-                        ),
-                      )),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -1456,25 +1725,48 @@ class _LineupTabState extends State<_LineupTab> {
           const SizedBox(height: 18),
           Text(
             'BAJAS CONFIRMADAS',
-            style: AppText.style(12, weight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 0.4),
+            style: AppText.style(
+              12,
+              weight: FontWeight.w600,
+              color: AppColors.textMuted,
+              letterSpacing: 0.4,
+            ),
           ),
           const SizedBox(height: 10),
           AppCard(
             child: Column(
               children: active.injuries
-                  .map((inj) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.local_hospital_rounded, size: 16, color: AppColors.red),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(inj.name, style: AppText.style(12.5, weight: FontWeight.w600)),
+                  .map(
+                    (inj) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.local_hospital_rounded,
+                            size: 16,
+                            color: AppColors.red,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              inj.name,
+                              style: AppText.style(
+                                12.5,
+                                weight: FontWeight.w600,
+                              ),
                             ),
-                            Text(inj.reason, style: AppText.style(11.5, color: AppColors.textMuted)),
-                          ],
-                        ),
-                      ))
+                          ),
+                          Text(
+                            inj.reason,
+                            style: AppText.style(
+                              11.5,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -1487,9 +1779,16 @@ class _LineupTabState extends State<_LineupTab> {
 // Agrupa suplentes por posición (G/D/M/F que manda la API) en el orden
 // habitual portero → defensa → medio → delantero.
 const _posOrder = ['G', 'D', 'M', 'F'];
-const _posLabels = {'G': 'PORTEROS', 'D': 'DEFENSAS', 'M': 'MEDIOCAMPISTAS', 'F': 'DELANTEROS'};
+const _posLabels = {
+  'G': 'PORTEROS',
+  'D': 'DEFENSAS',
+  'M': 'MEDIOCAMPISTAS',
+  'F': 'DELANTEROS',
+};
 
-List<(String, List<RealLineupPlayer>)> _groupByPosition(List<RealLineupPlayer> players) {
+List<(String, List<RealLineupPlayer>)> _groupByPosition(
+  List<RealLineupPlayer> players,
+) {
   final byPos = <String, List<RealLineupPlayer>>{};
   for (final p in players) {
     byPos.putIfAbsent(p.pos, () => []).add(p);
@@ -1508,7 +1807,8 @@ List<(String, List<RealLineupPlayer>)> _groupByPosition(List<RealLineupPlayer> p
 // Silueta genérica (4-3-3) cuando la API todavía no publicó la alineación
 // real — muestra la cancha con iconos vacíos en vez de dejarla en blanco.
 RealTeamLineup _placeholderLineup(String team) {
-  RealLineupPlayer p() => const RealLineupPlayer(id: 0, number: 0, name: '', pos: '');
+  RealLineupPlayer p() =>
+      const RealLineupPlayer(id: 0, number: 0, name: '', pos: '');
   return RealTeamLineup(
     teamId: 0,
     team: team,
@@ -1642,7 +1942,8 @@ class _MatchChatTabState extends State<_MatchChatTab> {
     });
   }
 
-  bool get _matchFinished => widget.pick.liveScore != null && !widget.pick.isLive;
+  bool get _matchFinished =>
+      context.read<AppState>().isMatchFinished(widget.pick);
 
   void _send() {
     if (_matchFinished) return;
@@ -1701,7 +2002,9 @@ class _MatchChatTabState extends State<_MatchChatTab> {
                     final isLast = i == messages.length - 1 && !isLoading;
                     return ChatBubble(
                       message: messages[i],
-                      onSuggestionTap: isLast && !_matchFinished ? _sendSuggestion : null,
+                      onSuggestionTap: isLast && !_matchFinished
+                          ? _sendSuggestion
+                          : null,
                     );
                   },
                 ),
@@ -1710,7 +2013,9 @@ class _MatchChatTabState extends State<_MatchChatTab> {
           controller: _controller,
           onSend: _send,
           enabled: !_matchFinished,
-          hint: _matchFinished ? 'El partido ya terminó — chat cerrado' : 'Pregunta sobre este partido...',
+          hint: _matchFinished
+              ? 'El partido ya terminó — chat cerrado'
+              : 'Pregunta sobre este partido...',
         ),
       ],
     );
@@ -1740,7 +2045,11 @@ class _StatRowBar extends StatelessWidget {
               ),
               Text(
                 stat.label,
-                style: AppText.style(14, color: AppColors.textMuted, weight: FontWeight.w600),
+                style: AppText.style(
+                  14,
+                  color: AppColors.textMuted,
+                  weight: FontWeight.w600,
+                ),
               ),
               Text(
                 stat.valueB,
@@ -1794,7 +2103,10 @@ class _EventsTabState extends State<_EventsTab> {
     // en vivo, los eventos cambian partido a partido — se refresca solo,
     // sin que el usuario tenga que salir y volver a entrar a la pestaña.
     if (widget.pick.isLive) {
-      _liveRefresh = Timer.periodic(const Duration(seconds: 30), (_) => _load(silent: true));
+      _liveRefresh = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _load(silent: true),
+      );
     }
   }
 
@@ -1823,28 +2135,38 @@ class _EventsTabState extends State<_EventsTab> {
     }
 
     if (_events == null) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.green));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.green),
+      );
     }
 
     if (_events!.isEmpty) {
       return const EmptyState(
         icon: Icons.timeline_rounded,
         title: 'Sin eventos todavía',
-        message: 'Los goles y tarjetas del partido van a aparecer aquí en cuanto arranque.',
+        message:
+            'Los goles y tarjetas del partido van a aparecer aquí en cuanto arranque.',
       );
     }
 
     // más reciente arriba — lo más relevante en un partido en vivo es lo
     // que acaba de pasar, no lo que pasó hace una hora.
-    final events = [...(_events!)]..sort((a, b) {
+    final events = [...(_events!)]
+      ..sort((a, b) {
         final aTotal = a.minute * 100 + (a.extraMinute ?? 0);
         final bTotal = b.minute * 100 + (b.extraMinute ?? 0);
         return bTotal.compareTo(aTotal);
       });
 
     Widget iconFor(MatchEvent e) {
-      if (e.isGoal) return const Icon(Icons.sports_soccer_rounded, size: 18, color: AppColors.green);
-      if (e.isRedCard) return Container(width: 12, height: 16, color: AppColors.red);
+      if (e.isGoal)
+        return const Icon(
+          Icons.sports_soccer_rounded,
+          size: 18,
+          color: AppColors.green,
+        );
+      if (e.isRedCard)
+        return Container(width: 12, height: 16, color: AppColors.red);
       return Container(width: 12, height: 16, color: const Color(0xFFE8C13B));
     }
 
@@ -1863,7 +2185,11 @@ class _EventsTabState extends State<_EventsTab> {
                 width: 40,
                 child: Text(
                   e.minuteLabel,
-                  style: AppText.style(13, weight: FontWeight.w800, color: AppColors.textMuted),
+                  style: AppText.style(
+                    13,
+                    weight: FontWeight.w800,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -1874,15 +2200,26 @@ class _EventsTabState extends State<_EventsTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      e.isGoal ? '¡Gol! ${e.player}' : '${e.player} — ${e.isRedCard ? "tarjeta roja" : "tarjeta amarilla"}',
+                      e.isGoal
+                          ? '¡Gol! ${e.player}'
+                          : '${e.player} — ${e.isRedCard ? "tarjeta roja" : "tarjeta amarilla"}',
                       style: AppText.style(13, weight: FontWeight.w700),
                     ),
                     if (e.assist != null) ...[
                       const SizedBox(height: 2),
-                      Text('Asistencia: ${e.assist}', style: AppText.style(11.5, color: AppColors.textMuted)),
+                      Text(
+                        'Asistencia: ${e.assist}',
+                        style: AppText.style(11.5, color: AppColors.textMuted),
+                      ),
                     ],
                     const SizedBox(height: 2),
-                    Text(e.team, style: AppText.style(11.5, color: isTeamA ? AppColors.green : AppColors.textMuted)),
+                    Text(
+                      e.team,
+                      style: AppText.style(
+                        11.5,
+                        color: isTeamA ? AppColors.green : AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1902,35 +2239,36 @@ class _StatsTab extends StatefulWidget {
   State<_StatsTab> createState() => _StatsTabState();
 }
 
-// Mismas 7 filas que devuelve el backend (app/routes/stats.py), en 0 —
-// se muestran cuando el partido aún no arranca y la API no tiene datos.
-final _placeholderStatRows = [
-  const MatchStatRow(label: 'Posesión de balón', valueA: '0%', valueB: '0%', fractionA: 0),
-  const MatchStatRow(label: 'Tiros totales', valueA: '0', valueB: '0', fractionA: 0.5),
-  const MatchStatRow(label: 'Tiros a puerta', valueA: '0', valueB: '0', fractionA: 0.5),
-  const MatchStatRow(label: 'Precisión de pases', valueA: '0%', valueB: '0%', fractionA: 0),
-  const MatchStatRow(label: 'Faltas', valueA: '0', valueB: '0', fractionA: 0.5),
-  const MatchStatRow(label: 'Tarjetas amarillas', valueA: '0', valueB: '0', fractionA: 0.5),
-  const MatchStatRow(label: 'Saques de esquina', valueA: '0', valueB: '0', fractionA: 0.5),
-];
-
 class _StatsTabState extends State<_StatsTab> {
   List<MatchStatRow>? _stats;
   bool _error = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    // Solo existe mientras esta pestaña está abierta. El backend comparte la
+    // respuesta por fixture, así que no se multiplica por usuario o plan.
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 90),
+      (_) => _load(keepCurrent: true),
+    );
   }
 
-  Future<void> _load() async {
-    setState(() => _error = false);
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool keepCurrent = false}) async {
+    if (!keepCurrent) setState(() => _error = false);
     try {
       final stats = await StatsService.instance.fetchStats(widget.pick.id);
       if (mounted) setState(() => _stats = stats);
     } catch (_) {
-      if (mounted) setState(() => _error = true);
+      if (mounted && _stats == null) setState(() => _error = true);
     }
   }
 
@@ -1948,7 +2286,8 @@ class _StatsTabState extends State<_StatsTab> {
       );
     }
 
-    final rows = _stats!.isNotEmpty ? _stats! : _placeholderStatRows;
+    final noOfficialStats = _stats!.isEmpty;
+    final finished = context.read<AppState>().isMatchFinished(pick);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 40),
@@ -1958,14 +2297,26 @@ class _StatsTabState extends State<_StatsTab> {
             children: [
               Row(
                 children: [
-                  TeamCrest(name: pick.teamA, size: 40, logoUrl: pick.teamALogoUrl),
+                  TeamCrest(
+                    name: pick.teamA,
+                    size: 40,
+                    logoUrl: pick.teamALogoUrl,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(pick.teamA, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.style(14, weight: FontWeight.w700)),
-                        Text('Local', style: AppText.style(11, color: AppColors.textMuted)),
+                        Text(
+                          pick.teamA,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.style(14, weight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Local',
+                          style: AppText.style(11, color: AppColors.textMuted),
+                        ),
                       ],
                     ),
                   ),
@@ -1973,18 +2324,62 @@ class _StatsTabState extends State<_StatsTab> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(pick.teamB, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.style(14, weight: FontWeight.w700)),
-                      Text('Visitante', style: AppText.style(11, color: AppColors.textMuted)),
+                      Text(
+                        pick.teamB,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.style(14, weight: FontWeight.w700),
+                      ),
+                      Text(
+                        'Visitante',
+                        style: AppText.style(11, color: AppColors.textMuted),
+                      ),
                     ],
                   ),
                   const SizedBox(width: 10),
-                  TeamCrest(name: pick.teamB, size: 40, logoUrl: pick.teamBLogoUrl),
+                  TeamCrest(
+                    name: pick.teamB,
+                    size: 40,
+                    logoUrl: pick.teamBLogoUrl,
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
               Container(height: 1, color: AppColors.cardBorder),
               const SizedBox(height: 14),
-              ...rows.map((s) => _StatRowBar(stat: s)),
+              if (noOfficialStats)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Column(
+                    children: [
+                      Icon(
+                        finished
+                            ? Icons.bar_chart_outlined
+                            : Icons.sync_rounded,
+                        color: AppColors.green,
+                        size: 28,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        finished
+                            ? 'No hay estadísticas oficiales para este partido'
+                            : 'Actualizando estadísticas oficiales…',
+                        textAlign: TextAlign.center,
+                        style: AppText.style(14, weight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        finished
+                            ? 'La fuente no publicó métricas verificables.'
+                            : 'Esta pantalla se actualiza automáticamente.',
+                        textAlign: TextAlign.center,
+                        style: AppText.style(11.5, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ..._stats!.map((s) => _StatRowBar(stat: s)),
             ],
           ),
         ),
@@ -2017,7 +2412,9 @@ class _MarketsTab extends StatelessWidget {
       });
 
     // Con Premium ya pagado no tiene caso resumir nada — se ven todos.
-    final shownPremium = isPremiumUser ? premium : premium.take(_kMaxLockedPreviews).toList();
+    final shownPremium = isPremiumUser
+        ? premium
+        : premium.take(_kMaxLockedPreviews).toList();
     final hiddenCount = premium.length - shownPremium.length;
 
     return ListView(
@@ -2043,10 +2440,13 @@ class _MarketsTab extends StatelessWidget {
                   pick: p,
                   locked: state.isLocked(p),
                   onOpen: () => context.read<AppState>().openDetail(p.id),
-                  onUnlock: () => context.read<AppState>().go(AppScreen.paywall),
+                  onUnlock: () =>
+                      context.read<AppState>().go(AppScreen.paywall),
                   revealFreePick: true,
                 ),
-                if (p.id.endsWith('-0') && p.market0ProbHome != null && !state.isLocked(p)) ...[
+                if (p.id.endsWith('-0') &&
+                    p.market0ProbHome != null &&
+                    !state.isLocked(p)) ...[
                   const SizedBox(height: 8),
                   _ProbBreakdownBar(pick: p),
                 ],
@@ -2061,7 +2461,11 @@ class _MarketsTab extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.yellow),
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 18,
+                    color: AppColors.yellow,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -2069,7 +2473,11 @@ class _MarketsTab extends StatelessWidget {
                       style: AppText.style(13, weight: FontWeight.w700),
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -2103,7 +2511,9 @@ class _PlayerPropsSectionState extends State<_PlayerPropsSection> {
 
   Future<void> _load() async {
     try {
-      final props = await PlayerPropsService.instance.fetchForFixture(widget.fixtureId);
+      final props = await PlayerPropsService.instance.fetchForFixture(
+        widget.fixtureId,
+      );
       if (mounted) setState(() => _props = props);
     } catch (_) {
       if (mounted) setState(() => _error = true);
@@ -2120,14 +2530,20 @@ class _PlayerPropsSectionState extends State<_PlayerPropsSection> {
   Widget build(BuildContext context) {
     // Silencioso si falla o no hay nada — la alineación puede no estar
     // confirmada todavía, eso es lo normal, no un error que mostrar.
-    if (_error || (_props != null && _props!.isEmpty)) return const SizedBox.shrink();
+    if (_error || (_props != null && _props!.isEmpty))
+      return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'TIROS AL ARCO POR JUGADOR',
-          style: AppText.style(12, weight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 0.4),
+          style: AppText.style(
+            12,
+            weight: FontWeight.w600,
+            color: AppColors.textMuted,
+            letterSpacing: 0.4,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -2138,34 +2554,61 @@ class _PlayerPropsSectionState extends State<_PlayerPropsSection> {
         if (_props == null)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator(color: AppColors.green, strokeWidth: 2)),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.green,
+                strokeWidth: 2,
+              ),
+            ),
           )
         else
-          ..._props!.map((p) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: AppCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.playerName, style: AppText.style(13, weight: FontWeight.w700)),
-                            const SizedBox(height: 2),
-                            Text(p.pick, style: AppText.style(12, color: AppColors.textBody)),
-                            const SizedBox(height: 2),
-                            Text('Muestra: ${p.sampleMatches} partidos',
-                                style: AppText.style(10, color: AppColors.textFaint)),
-                          ],
-                        ),
-                      ),
-                      Text('${p.displayPct}%',
-                          style: AppText.style(16, weight: FontWeight.w800, color: _barColor(p.displayPct))),
-                    ],
-                  ),
+          ..._props!.map(
+            (p) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: AppCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
-              )),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.playerName,
+                            style: AppText.style(13, weight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            p.pick,
+                            style: AppText.style(12, color: AppColors.textBody),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Muestra: ${p.sampleMatches} partidos',
+                            style: AppText.style(
+                              10,
+                              color: AppColors.textFaint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${p.displayPct}%',
+                      style: AppText.style(
+                        16,
+                        weight: FontWeight.w800,
+                        color: _barColor(p.displayPct),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -2212,7 +2655,10 @@ class _StandingsTabState extends State<_StandingsTab> {
   Future<void> _load() async {
     final highlight = {widget.pick.teamA, widget.pick.teamB};
     try {
-      final rows = await StandingsService.instance.fetchStandings(widget.pick.league, highlightTeams: highlight);
+      final rows = await StandingsService.instance.fetchStandings(
+        widget.pick.league,
+        highlightTeams: highlight,
+      );
       if (mounted) setState(() => _rows = rows);
     } catch (_) {
       if (mounted) setState(() => _error = true);
@@ -2221,7 +2667,10 @@ class _StandingsTabState extends State<_StandingsTab> {
     // el bracket es secundario — si falla, se queda vacío y solo se oculta
     // la pestaña, no se rompe la tabla de posiciones que ya cargó bien
     try {
-      final bracket = await StandingsService.instance.fetchBracket(widget.pick.league, highlightTeams: highlight);
+      final bracket = await StandingsService.instance.fetchBracket(
+        widget.pick.league,
+        highlightTeams: highlight,
+      );
       if (mounted) setState(() => _bracket = bracket);
     } catch (_) {
       // silencioso a propósito
@@ -2254,8 +2703,12 @@ class _StandingsTabState extends State<_StandingsTab> {
     // tabla de posiciones para ella), así que es su PROPIA pestaña, no un
     // bloque más dentro de "Eliminatorias" (si no, hay que hacer scroll por
     // decenas de partidos de grupo solo para llegar al bracket real).
-    final hasGroupStage = _bracket.isNotEmpty && _bracket.first.round.toLowerCase() == 'group stage';
-    final groupMatches = hasGroupStage ? _bracket.first.matches : const <BracketMatch>[];
+    final hasGroupStage =
+        _bracket.isNotEmpty &&
+        _bracket.first.round.toLowerCase() == 'group stage';
+    final groupMatches = hasGroupStage
+        ? _bracket.first.matches
+        : const <BracketMatch>[];
     final knockoutRounds = hasGroupStage ? _bracket.sublist(1) : _bracket;
 
     if (!hasTable && groupMatches.isEmpty && knockoutRounds.isEmpty) {
@@ -2268,8 +2721,10 @@ class _StandingsTabState extends State<_StandingsTab> {
 
     final sections = <(String, Widget)>[
       if (hasTable) ('General', _StandingsTable(rows: rows)),
-      if (groupMatches.isNotEmpty) ('Fase de grupos', _GroupStageList(matches: groupMatches)),
-      if (knockoutRounds.isNotEmpty) ('Eliminatorias', _BracketTree(rounds: knockoutRounds)),
+      if (groupMatches.isNotEmpty)
+        ('Fase de grupos', _GroupStageList(matches: groupMatches)),
+      if (knockoutRounds.isNotEmpty)
+        ('Eliminatorias', _BracketTree(rounds: knockoutRounds)),
     ];
     final selected = _selectedTab.clamp(0, sections.length - 1);
 
@@ -2305,7 +2760,11 @@ class _StandingsSubTabs extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
 
-  const _StandingsSubTabs({required this.labels, required this.selected, required this.onChanged});
+  const _StandingsSubTabs({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2346,7 +2805,8 @@ class _StandingsSubTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (var i = 0; i < labels.length; i++) pill(labels[i], i == selected, () => onChanged(i)),
+          for (var i = 0; i < labels.length; i++)
+            pill(labels[i], i == selected, () => onChanged(i)),
         ],
       ),
     );
@@ -2378,123 +2838,123 @@ class _StandingsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      child: Text(
-                        '#',
-                        style: AppText.style(11, color: AppColors.textMuted),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Equipo',
-                        style: AppText.style(11, color: AppColors.textMuted),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32,
-                      child: Text(
-                        'PJ',
-                        textAlign: TextAlign.right,
-                        style: AppText.style(11, color: AppColors.textMuted),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 36,
-                      child: Text(
-                        'DG',
-                        textAlign: TextAlign.right,
-                        style: AppText.style(11, color: AppColors.textMuted),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32,
-                      child: Text(
-                        'Pts',
-                        textAlign: TextAlign.right,
-                        style: AppText.style(11, color: AppColors.textMuted),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: AppColors.cardBorder, height: 1),
-              ...rows.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        child: Text(
-                          '${r.pos}',
-                          style: AppText.style(
-                            12.5,
-                            weight: FontWeight.w600,
-                            color: r.highlighted
-                                ? Colors.white
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          r.team,
-                          style: AppText.style(
-                            12.5,
-                            weight: r.highlighted
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: r.highlighted
-                                ? Colors.white
-                                : AppColors.textBody,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 32,
-                        child: Text(
-                          '${r.played}',
-                          textAlign: TextAlign.right,
-                          style: AppText.style(12.5, color: AppColors.textBody),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 36,
-                        child: Text(
-                          r.goalDiff >= 0 ? '+${r.goalDiff}' : '${r.goalDiff}',
-                          textAlign: TextAlign.right,
-                          style: AppText.style(
-                            12.5,
-                            weight: FontWeight.w600,
-                            color: r.goalDiff >= 0
-                                ? AppColors.green
-                                : AppColors.red,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 32,
-                        child: Text(
-                          '${r.points}',
-                          textAlign: TextAlign.right,
-                          style: AppText.style(12.5, weight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '#',
+                    style: AppText.style(11, color: AppColors.textMuted),
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: Text(
+                    'Equipo',
+                    style: AppText.style(11, color: AppColors.textMuted),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    'PJ',
+                    textAlign: TextAlign.right,
+                    style: AppText.style(11, color: AppColors.textMuted),
+                  ),
+                ),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    'DG',
+                    textAlign: TextAlign.right,
+                    style: AppText.style(11, color: AppColors.textMuted),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    'Pts',
+                    textAlign: TextAlign.right,
+                    style: AppText.style(11, color: AppColors.textMuted),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
+          const Divider(color: AppColors.cardBorder, height: 1),
+          ...rows.map(
+            (r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      '${r.pos}',
+                      style: AppText.style(
+                        12.5,
+                        weight: FontWeight.w600,
+                        color: r.highlighted
+                            ? Colors.white
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      r.team,
+                      style: AppText.style(
+                        12.5,
+                        weight: r.highlighted
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: r.highlighted
+                            ? Colors.white
+                            : AppColors.textBody,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '${r.played}',
+                      textAlign: TextAlign.right,
+                      style: AppText.style(12.5, color: AppColors.textBody),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 36,
+                    child: Text(
+                      r.goalDiff >= 0 ? '+${r.goalDiff}' : '${r.goalDiff}',
+                      textAlign: TextAlign.right,
+                      style: AppText.style(
+                        12.5,
+                        weight: FontWeight.w600,
+                        color: r.goalDiff >= 0
+                            ? AppColors.green
+                            : AppColors.red,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '${r.points}',
+                      textAlign: TextAlign.right,
+                      style: AppText.style(12.5, weight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -2527,7 +2987,8 @@ List<List<BracketMatch>> _reorderForBracket(List<BracketRound> rounds) {
       for (var i = 0; i < prev.length; i++) {
         if (used.contains(i)) continue;
         final pm = prev[i];
-        final feedsChild = pm.teamHome == child.teamHome ||
+        final feedsChild =
+            pm.teamHome == child.teamHome ||
             pm.teamAway == child.teamHome ||
             pm.teamHome == child.teamAway ||
             pm.teamAway == child.teamAway;
@@ -2602,7 +3063,12 @@ class _BracketTree extends StatelessWidget {
                     child: Text(
                       label,
                       textAlign: TextAlign.center,
-                      style: AppText.style(12, weight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.2),
+                      style: AppText.style(
+                        12,
+                        weight: FontWeight.w700,
+                        color: AppColors.textMuted,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
               ],
@@ -2613,7 +3079,12 @@ class _BracketTree extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: CustomPaint(painter: _BracketConnectorPainter(rounds: ordered, centerY: _centerY)),
+                    child: CustomPaint(
+                      painter: _BracketConnectorPainter(
+                        rounds: ordered,
+                        centerY: _centerY,
+                      ),
+                    ),
                   ),
                   for (var r = 0; r < ordered.length; r++)
                     for (var m = 0; m < ordered[r].length; m++)
@@ -2654,7 +3125,8 @@ class _BracketConnectorPainter extends CustomPainter {
       for (var m = 0; m < rounds[r].length; m++) {
         final feederA = 2 * m;
         final feederB = 2 * m + 1;
-        if (feederB >= rounds[r - 1].length) continue; // sin par completo (bye) — no se dibuja
+        if (feederB >= rounds[r - 1].length)
+          continue; // sin par completo (bye) — no se dibuja
         final yA = centerY(r - 1, feederA);
         final yB = centerY(r - 1, feederB);
         final yTarget = centerY(r, m);
@@ -2674,7 +3146,8 @@ class _BracketConnectorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BracketConnectorPainter oldDelegate) => oldDelegate.rounds != rounds;
+  bool shouldRepaint(covariant _BracketConnectorPainter oldDelegate) =>
+      oldDelegate.rounds != rounds;
 }
 
 class _BracketCard extends StatelessWidget {
@@ -2687,12 +3160,29 @@ class _BracketCard extends StatelessWidget {
         Container(
           width: 18,
           height: 18,
-          decoration: const BoxDecoration(color: Color(0xFF3A4048), shape: BoxShape.circle),
+          decoration: const BoxDecoration(
+            color: Color(0xFF3A4048),
+            shape: BoxShape.circle,
+          ),
           alignment: Alignment.center,
-          child: const Text('?', style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w700)),
+          child: const Text(
+            '?',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
-        Text('Por definir', style: AppText.style(12, weight: FontWeight.w500, color: AppColors.textFaint)),
+        Text(
+          'Por definir',
+          style: AppText.style(
+            12,
+            weight: FontWeight.w500,
+            color: AppColors.textFaint,
+          ),
+        ),
       ],
     );
   }
@@ -2702,7 +3192,9 @@ class _BracketCard extends StatelessWidget {
     final decoration = BoxDecoration(
       color: AppColors.card,
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: match.highlighted ? AppColors.green : AppColors.cardBorder),
+      border: Border.all(
+        color: match.highlighted ? AppColors.green : AppColors.cardBorder,
+      ),
     );
 
     if (match.isPlaceholder) {
@@ -2712,13 +3204,19 @@ class _BracketCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_placeholderRow(), const SizedBox(height: 6), _placeholderRow()],
+          children: [
+            _placeholderRow(),
+            const SizedBox(height: 6),
+            _placeholderRow(),
+          ],
         ),
       );
     }
 
-    final homeWins = match.isFinished && (match.goalsHome ?? 0) > (match.goalsAway ?? 0);
-    final awayWins = match.isFinished && (match.goalsAway ?? 0) > (match.goalsHome ?? 0);
+    final homeWins =
+        match.isFinished && (match.goalsHome ?? 0) > (match.goalsAway ?? 0);
+    final awayWins =
+        match.isFinished && (match.goalsAway ?? 0) > (match.goalsHome ?? 0);
 
     Widget teamRow(String name, String? logoUrl, int? goals, bool wins) {
       return Row(
@@ -2739,7 +3237,11 @@ class _BracketCard extends StatelessWidget {
           ),
           Text(
             match.isFinished ? '${goals ?? 0}' : '',
-            style: AppText.style(12.5, weight: FontWeight.w800, color: wins ? AppColors.green : AppColors.textMuted),
+            style: AppText.style(
+              12.5,
+              weight: FontWeight.w800,
+              color: wins ? AppColors.green : AppColors.textMuted,
+            ),
           ),
         ],
       );
@@ -2756,13 +3258,29 @@ class _BracketCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 3),
               child: Text(
-                match.time != null ? '${_shortDate(match.date)} · ${match.time}' : _shortDate(match.date),
-                style: AppText.style(9.5, weight: FontWeight.w600, color: AppColors.textFaint),
+                match.time != null
+                    ? '${_shortDate(match.date)} · ${match.time}'
+                    : _shortDate(match.date),
+                style: AppText.style(
+                  9.5,
+                  weight: FontWeight.w600,
+                  color: AppColors.textFaint,
+                ),
               ),
             ),
-          teamRow(match.teamHome, match.teamHomeLogoUrl, match.goalsHome, homeWins),
+          teamRow(
+            match.teamHome,
+            match.teamHomeLogoUrl,
+            match.goalsHome,
+            homeWins,
+          ),
           const SizedBox(height: 5),
-          teamRow(match.teamAway, match.teamAwayLogoUrl, match.goalsAway, awayWins),
+          teamRow(
+            match.teamAway,
+            match.teamAwayLogoUrl,
+            match.goalsAway,
+            awayWins,
+          ),
         ],
       ),
     );
