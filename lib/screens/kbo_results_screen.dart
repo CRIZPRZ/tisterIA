@@ -126,7 +126,13 @@ class _KboResultsScreenState extends State<KboResultsScreen> {
                                 _KboFilter.ayer => 'Sin partidos ayer',
                                 _ => 'Sin partidos hoy',
                               },
-                              message: 'Todavía no hay partidos de KBO para ese día.',
+                              // Aquí ya se cargaron partidos de otros días, así
+                              // que la sincronización funciona y el día está
+                              // vacío de verdad. El texto anterior ("todavía no
+                              // hay") sonaba a datos faltantes y se leía como
+                              // una falla — pasa seguido, la KBO descansa entre
+                              // la temporada regular y los playoffs.
+                              message: 'La KBO no tiene partidos programados ese día.',
                             )
                           : RefreshIndicator(
                               color: AppColors.green,
